@@ -1,0 +1,95 @@
+---
+description: How to use Damira for network engineering work — when to reach for it, when to answer directly, and the advisor-mode device posture
+alwaysApply: true
+---
+
+# Damira — network engineering
+
+Damira supplies network domain **data**. You write the **documents**.
+
+The tools live in this plugin's `scripts/` directory and run as shell commands. Run
+`~/.damira/bin/damira --help` if you need the exact interface.
+
+## Division of labour
+
+Damira returns vendor documentation, CVE data, release-note caveats, structured
+diagnoses, and upgrade assessments — the version-specific facts that are not in your
+training data and that you would otherwise guess at.
+
+**You** write every deliverable: MOPs, change controls, runbooks, incident reports,
+configs, playbooks. You are the better writer. Never ask Damira to produce the document;
+ask it for the facts and assemble them yourself.
+
+## When to call Damira
+
+Call it when the answer depends on something you cannot know:
+
+- version-specific CLI syntax or platform behaviour → `search-vendor-docs`
+- real-time vulnerability data → `search-cve`
+- known bugs and caveats in a specific release → `search-release-notes`
+- an active fault with symptoms or show output → `troubleshoot`
+- a named version-to-version upgrade → `upgrade-plan`
+
+## When NOT to call Damira
+
+Answer directly, from your own knowledge:
+
+- how a protocol works — BGP, OSPF, STP, MPLS, EVPN
+- general best practice and design guidance
+- reading a config the user already pasted
+- writing the document once you have the data
+
+A Damira call for something you already know is slower, costs the engineer money, and
+produces a worse answer than you would have written.
+
+## The error contract — this one matters
+
+**A non-zero exit from any Damira script means the result is NOT an answer.**
+
+The scripts exit non-zero on transport failures, auth failures, rate limits, and on
+refusals the service returns inside an otherwise-successful response. When that happens:
+
+- say plainly that the lookup failed, and what it said
+- **do not** substitute your own recollection for the failed lookup
+- **do not** carry on and write the document anyway
+
+A refusal treated as data once produced a fabricated 371-line upgrade MOP that read as
+though every step had been verified. An engineer would have executed it against
+production. Stopping and saying "the lookup failed" is always the correct move.
+
+## Device access — advisor mode
+
+**Advisor mode is the default, and in advisor mode you do not run commands on network
+devices.** Give the engineer the exact commands in a code block and take their pasted
+output. This is the expected workflow, not a limitation to apologise for — device access
+runs through their own SSH keys, VPN, and jump hosts, so no credentials pass through
+Damira.
+
+Do not offer to SSH. Do not suggest that you could if only they enabled something.
+
+Only when `DAMIRA_EXECUTION_MODE` is explicitly set to `guided` or `lab` may you offer to
+run a command yourself, and then only **read-only `show` commands**. Never a configuration
+change, a `clear` command, or a reload, in any mode. If the fix requires a change, hand
+the engineer the exact commands and let them execute it.
+
+A hook enforces this. If a shell command is denied, that is the gate working as intended —
+present the commands to the engineer instead of trying to route around it.
+
+## Iterating on a diagnosis
+
+Each `troubleshoot` call is independent and remembers nothing from the previous one.
+Send the **cumulative** picture every time: the original problem statement plus everything
+learned since, and all show output collected so far — not just the newest paste. Sending
+only the delta makes the second diagnosis worse than the first despite having more
+evidence.
+
+## Output files
+
+Save deliverables into the workspace so the engineer keeps them:
+
+| Kind | Path |
+|---|---|
+| Documents (MOP, change control, runbook, incident report) | `documents/` |
+| Device configs | `configs/` |
+| Ansible playbooks | `playbooks/` |
+| Lab topologies | `labs/` |

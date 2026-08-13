@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "damira": {
+      "command": "python3",
+      "args": ["${userHome}/.damira/bin/damira-mcp-server.py"],
+      "env": {
+        "DAMIRA_API_KEY": "${env:DAMIRA_API_KEY}",
+        "DAMIRA_EXECUTION_MODE": "advisor"
+      }
+    }
+  }
+}

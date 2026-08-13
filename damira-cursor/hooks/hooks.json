@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      { "command": "python3 \"$CURSOR_PLUGIN_ROOT/hooks-handlers/session_start.py\"" }
+    ],
+    "beforeShellExecution": [
+      { "command": "python3 \"$CURSOR_PLUGIN_ROOT/hooks-handlers/device_gate.py\"", "failClosed": true }
+    ]
+  }
+}
