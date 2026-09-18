@@ -4,13 +4,13 @@ import unittest
 from pathlib import Path
 
 _PLUGIN_ROOT = Path(__file__).resolve().parent.parent
-_REPO_ROOT = _PLUGIN_ROOT.parent.parent
 sys.path.insert(0, str(_PLUGIN_ROOT / "scripts"))
 
 import audit_config  # noqa: E402 — path must be set first
 
-INSECURE_CFG = (_REPO_ROOT / "scripts" / "fixtures" / "insecure-ios.cfg").read_text()
-HARDENED_CFG = (_REPO_ROOT / "scripts" / "fixtures" / "hardened-ios.cfg").read_text()
+_FIXTURES = Path(__file__).resolve().parent / "fixtures"
+INSECURE_CFG = (_FIXTURES / "insecure-ios.cfg").read_text()
+HARDENED_CFG = (_FIXTURES / "hardened-ios.cfg").read_text()
 
 
 def _severities(findings):
