@@ -38,7 +38,15 @@ DEFAULT_API_URL = "https://damiraai.com"
 DEMO_KEY = "dm_demo_mcp"
 CONFIG_PATH = Path.home() / ".damira" / "config"
 TIMEOUT = 300
-VERSION = "0.2.0"
+VERSION = "0.2.1"
+
+# Exit codes. 1 stays the catch-all (auth, rate limit, network) so existing scripts that
+# just check "non-zero" keep working. 2 and 3 exist so an agent (or a human) can tell "no
+# answer exists" apart from "the service timed out — retry" without parsing stderr text.
+EXIT_ERROR = 1
+EXIT_NO_ANSWER = 2
+EXIT_GATEWAY_TIMEOUT = 3
+
 # Cloudflare fronts damiraai.com and blocks urllib's default `Python-urllib/3.x`
 # User-Agent with a 1010 ("banned browser signature") before the request ever reaches
 # the gateway. Identify the client properly or every call 403s.
@@ -60,6 +68,11 @@ REFUSAL_MARKERS = (
 # from tripping the check.
 REFUSAL_MAX_LEN = 600
 
+# The gateway's own "I searched and found nothing" message (NO_AUTHORITATIVE_RESULTS
+# server-side). Unlike REFUSAL_MARKERS this is not gated by REFUSAL_MAX_LEN — it is an
+# exact, unambiguous phrase, not a substring that could show up inside a real answer.
+NO_AUTHORITATIVE_RESULTS = "No authoritative source found for this query"
+
 
 class DamiraError(Exception):
     """A result that is not an answer.
@@ -67,10 +80,18 @@ class DamiraError(Exception):
     Raised rather than exiting so the same call path serves both the CLI (which turns
     this into a non-zero exit) and the bundled MCP server (which turns it into an
     isError tool result). Both surfaces must fail loudly — see the module docstring.
+
+    `code` is the process exit code the CLI should use — see EXIT_* above. The MCP
+    server ignores it; isError:true doesn't distinguish sub-reasons the way an exit
+    code can.
     """
 
+    def __init__(self, message: str, code: int = EXIT_ERROR):
+        super().__init__(message)
+        self.code = code
 
-def die(msg: str, code: int = 1) -> "None":
+
+def die(msg: str, code: int = EXIT_ERROR) -> "None":
     print(f"damira: {msg}", file=sys.stderr)
     sys.exit(code)
 
@@ -149,17 +170,32 @@ def call(message: str, context: dict) -> str:
                 raise DamiraError("demo limit reached (50/day). Unlimited access at "
                     "https://damiraai.com/pricing")
             raise DamiraError("rate limit exceeded. Upgrade at https://damiraai.com/pricing")
+        if exc.code in (504, 524):
+            # 504 = the gateway's own timeout (JSON body); 524 = Cloudflare gave up in
+            # front of it (HTML body, hence not even trying to parse `detail` as JSON).
+            # Either way the request never got an answer — same message, same code.
+            raise DamiraError(
+                "Damira took too long to answer; try a narrower question",
+                code=EXIT_GATEWAY_TIMEOUT,
+            )
         raise DamiraError(f"API error {exc.code}: {detail}")
     except urllib.error.URLError as exc:
         raise DamiraError(f"cannot reach the Damira API at {api_url} ({exc.reason})")
     except TimeoutError:
-        raise DamiraError(f"request timed out after {TIMEOUT}s")
+        # A client-side socket timeout after TIMEOUT seconds — no HTTP status at all,
+        # but it's the same "took too long" story as a 504/524 from the agent's side.
+        raise DamiraError(f"request timed out after {TIMEOUT}s", code=EXIT_GATEWAY_TIMEOUT)
     except json.JSONDecodeError:
         raise DamiraError("API returned a non-JSON response")
 
     response = payload.get("response", "")
     if not response:
         raise DamiraError("API returned an empty response")
+
+    # Only a response that IS the no-answer message. A partial one (indexed docs
+    # plus an empty web supplement) is still an answer.
+    if response.strip().startswith(NO_AUTHORITATIVE_RESULTS):
+        raise DamiraError(response, code=EXIT_NO_ANSWER)
 
     if len(response) <= REFUSAL_MAX_LEN:
         for marker in REFUSAL_MARKERS:
@@ -375,7 +411,7 @@ def main() -> None:
     try:
         print(args.func(args))
     except DamiraError as exc:
-        die(str(exc))
+        die(str(exc), getattr(exc, "code", EXIT_ERROR))
 
 
 if __name__ == "__main__":

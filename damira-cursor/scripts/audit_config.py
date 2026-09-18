@@ -26,7 +26,84 @@ SECURITY_PATTERNS = [
     (r"username .* password", "Consider 'secret' instead of 'password'", "MEDIUM"),
 ]
 
+# Bare "password cisco" / "password 0 cisco" — the plaintext line password used under
+# line con/vty/aux. Deliberately excludes "password 7 ..." (already covered above) and
+# won't match "enable password ..." or "username ... password ..." since those don't
+# start the line with the literal token "password".
+PLAINTEXT_LINE_PASSWORD_RE = re.compile(r"^password\s+(?:0\s+)?\S+$", re.IGNORECASE)
+TRANSPORT_TELNET_RE = re.compile(r"^transport\s+input\b.*\b(telnet|all)\b", re.IGNORECASE)
+
 SEVERITY_ORDER = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
+
+
+def _parse_blocks(config_text: str) -> "list[tuple[str, int, list]]":
+    """Group indented lines under the nearest unindented parent line.
+
+    A hand-rolled, stdlib-only stand-in for the hierarchical parsing
+    services/oncall-agent/src/domains/analysis.py does with ciscoconfparse (see
+    _run_security_checks there for the reference logic this ports). Not imported —
+    this plugin has zero cross-service and zero third-party dependencies on purpose.
+
+    Returns [(parent_text, parent_line_no, [(child_text, child_line_no), ...]), ...].
+    """
+    blocks: "list[tuple[str, int, list]]" = []
+    current = None
+    for i, raw in enumerate(config_text.splitlines(), 1):
+        if not raw.strip():
+            continue
+        if raw[:1] in (" ", "\t"):
+            if current is not None:
+                current[2].append((raw.strip(), i))
+        else:
+            current = (raw.strip(), i, [])
+            blocks.append(current)
+    return blocks
+
+
+def _block_findings(config_text: str) -> "list[tuple[str, str, int]]":
+    """Checks that need to know which 'line' stanza a command sits in."""
+    findings: "list[tuple[str, str, int]]" = []
+    blocks = _parse_blocks(config_text)
+
+    vty_blocks = [b for b in blocks if re.match(r"^line vty\b", b[0], re.IGNORECASE)]
+    for parent_text, parent_line_no, children in vty_blocks:
+        has_access_class = False
+        for child_text, child_line_no in children:
+            if TRANSPORT_TELNET_RE.search(child_text):
+                findings.append(("HIGH",
+                    f"Telnet enabled on '{parent_text}' — restrict transport input to ssh"
+                    f"\n      → {child_text}", child_line_no))
+            if child_text.lower().startswith("access-class"):
+                has_access_class = True
+        if not has_access_class:
+            findings.append(("MEDIUM",
+                f"'{parent_text}' has no access-class — management access is unrestricted",
+                parent_line_no))
+
+    # Plaintext line passwords apply to con/aux too, not just vty — same risk either way.
+    line_blocks = [b for b in blocks if re.match(r"^line (vty|con|aux)\b", b[0], re.IGNORECASE)]
+    for parent_text, _parent_line_no, children in line_blocks:
+        for child_text, child_line_no in children:
+            if PLAINTEXT_LINE_PASSWORD_RE.match(child_text):
+                findings.append(("HIGH",
+                    f"Plaintext password on '{parent_text}' — use a hashed secret or enable "
+                    f"service password-encryption\n      → {child_text}", child_line_no))
+
+    return findings
+
+
+def _whole_config_security_findings(config_text: str) -> "list[tuple[str, str, int]]":
+    """Checks that only make sense once, against the whole config, not per line."""
+    findings: "list[tuple[str, str, int]]" = []
+    lowered = config_text.lower()
+    if "enable secret" not in lowered:
+        findings.append(("HIGH", "No 'enable secret' configured — privileged access is unprotected", 0))
+    if "service password-encryption" not in lowered:
+        findings.append(("HIGH",
+            "service password-encryption not enabled — stored passwords are plaintext", 0))
+    if "aaa new-model" not in lowered:
+        findings.append(("MEDIUM", "No 'aaa new-model' — AAA authentication is not enabled", 0))
+    return findings
 
 
 def audit(config_text: str, check_type: str = "all") -> "list[tuple[str, str, int]]":
@@ -38,6 +115,8 @@ def audit(config_text: str, check_type: str = "all") -> "list[tuple[str, str, in
             for pattern, message, severity in SECURITY_PATTERNS:
                 if re.search(pattern, line, re.IGNORECASE):
                     findings.append((severity, f"{message}\n      → {line.strip()}", i))
+        findings.extend(_block_findings(config_text))
+        findings.extend(_whole_config_security_findings(config_text))
 
     if check_type in ("best_practices", "all"):
         lowered = config_text.lower()
