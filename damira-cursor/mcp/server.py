@@ -81,8 +81,8 @@ TOOLS = [
     {
         "name": "damira_troubleshoot",
         "description": (
-            "CCIE-level structured diagnosis using GIDRP (Gather, Isolate, Diagnose, Resolve, "
-            "Prevent). USE WHEN there is an active fault and the user has symptoms or show "
+            "CCIE-level structured diagnosis: gathers evidence, isolates the fault domain, ranks "
+            "likely causes, and gives the exact CLI to confirm and fix. USE WHEN there is an active fault and the user has symptoms or show "
             "output. Each call is INDEPENDENT and remembers nothing — always send the "
             "cumulative problem statement and all output collected so far, not just the newest "
             "paste. Sending only the delta makes the second diagnosis worse than the first."

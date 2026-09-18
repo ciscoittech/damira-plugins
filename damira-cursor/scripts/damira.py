@@ -38,7 +38,7 @@ DEFAULT_API_URL = "https://damiraai.com"
 DEMO_KEY = "dm_demo_mcp"
 CONFIG_PATH = Path.home() / ".damira" / "config"
 TIMEOUT = 300
-VERSION = "0.2.2"
+VERSION = "0.2.3"
 
 # Exit codes. 1 stays the catch-all (auth, rate limit, network) so existing scripts that
 # just check "non-zero" keep working. 2 and 3 exist so an agent (or a human) can tell "no
@@ -378,7 +378,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--version", default="")
     s.set_defaults(func=cmd_search_release_notes)
 
-    s = sub.add_parser("troubleshoot", help="GIDRP diagnosis of an active fault")
+    s = sub.add_parser("troubleshoot", help="structured diagnosis of an active fault")
     s.add_argument("problem")
     s.add_argument("--platform", default="")
     s.add_argument("--show-output", default="", help="show output, or '-' to read stdin")

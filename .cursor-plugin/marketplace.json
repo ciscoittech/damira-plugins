@@ -11,7 +11,7 @@
     {
       "name": "damira",
       "source": "./damira-cursor",
-      "description": "CCIE-level network operations — GIDRP troubleshooting, upgrade planning with real release notes and CVE data, config security audit, and config generation for Cisco, Juniper, Arista, Palo Alto, and Fortinet. Advisor-mode by default: a device gate blocks the agent from ever SSHing to network devices.",
+      "description": "CCIE-level network operations — structured troubleshooting, upgrade planning with real release notes and CVE data, config security audit, and config generation for Cisco, Juniper, Arista, Palo Alto, and Fortinet. Advisor-mode by default: a device gate blocks the agent from ever SSHing to network devices.",
       "category": "networking",
       "tags": [
         "network-engineering",

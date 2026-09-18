@@ -112,3 +112,12 @@ def test_partial_no_answer_inside_a_real_answer_is_still_an_answer():
             + damira.NO_AUTHORITATIVE_RESULTS)
     with mock.patch("urllib.request.urlopen", return_value=_fake_response({"response": body})):
         assert damira.call("Search vendor docs: x", {"mcp_tool": "search_vendor_docs"}) == body
+
+
+def test_no_internal_methodology_names_ship_in_the_plugin():
+    """Customers see engineering reasoning, not internal framework names."""
+    root = Path(__file__).resolve().parent.parent
+    leaks = [str(p.relative_to(root)) for p in root.rglob("*")
+             if p.is_file() and p.suffix in {".py", ".md", ".json"}
+             and "tests" not in p.parts and "GIDRP" in p.read_text(errors="ignore")]
+    assert leaks == []

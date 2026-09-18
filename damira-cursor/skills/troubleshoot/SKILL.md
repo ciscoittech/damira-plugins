@@ -5,8 +5,8 @@ description: Ask Damira to diagnose an active, in-progress network fault. Use wh
 
 # Network Troubleshooting
 
-Diagnose network issues using Damira's CCIE-level GIDRP methodology (Gather, Isolate,
-Diagnose, Resolve, Prevent).
+Diagnose network issues the way a CCIE would: gather evidence, isolate the fault domain,
+rank the likely causes, then resolve and prevent a repeat.
 
 ## Step 1: Gather
 
