@@ -8,12 +8,26 @@ Your AI writes the MOP. Damira makes sure it's true.
 
 ## Try it in 60 seconds — no signup
 
+**Cursor:**
+
 ```bash
 agent plugin marketplace add https://github.com/ciscoittech/damira-plugins
 ```
 
 Then `/plugins` in the Cursor agent, or **Settings → Plugins** in the IDE, and install
-**damira**. A shared demo key (50 queries/day) is built in, so it works immediately.
+**damira**.
+
+**Claude Code:**
+
+```
+/plugin marketplace add ciscoittech/damira-plugins
+/plugin install damira@damira-plugins
+```
+
+Either way a shared demo key (50 queries/day) is built in, so it works immediately.
+Claude Code asks for your key and execution mode when you enable the plugin; leave the
+key blank for the demo key. The first time each Damira tool runs, Claude Code asks for
+permission — choose always-allow and it won't ask again.
 
 Ask it something real:
 

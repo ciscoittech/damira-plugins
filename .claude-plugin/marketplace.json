@@ -1,0 +1,19 @@
+{
+  "name": "damira-plugins",
+  "owner": {
+    "name": "Damira AI",
+    "email": "support@damiraai.com"
+  },
+  "metadata": {
+    "description": "CCIE-level network operations for AI coding agents — troubleshooting, upgrade planning, config audit, and device configuration grounded in live vendor data."
+  },
+  "plugins": [
+    {
+      "name": "damira",
+      "source": "./damira-claude-code",
+      "description": "CCIE-level network operations — structured troubleshooting, upgrade planning with real release notes and CVE data, config security audit, and config generation for Cisco, Juniper, Arista, Palo Alto, and Fortinet. Advisor mode by default: a device gate blocks the agent from SSHing to network devices.",
+      "category": "networking",
+      "tags": ["network-engineering", "troubleshooting", "cisco", "juniper", "arista", "bgp", "ospf", "noc", "ccie"]
+    }
+  ]
+}

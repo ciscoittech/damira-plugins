@@ -1,0 +1,25 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "damira",
+  "version": "0.2.3",
+  "description": "CCIE-level network operations — troubleshooting, upgrade planning, config audit, and device configuration for Cisco, Juniper, Arista, Palo Alto, and Fortinet",
+  "author": {
+    "name": "Damira AI"
+  },
+  "userConfig": {
+    "api_key": {
+      "type": "string",
+      "title": "Damira API key",
+      "description": "From damiraai.com > Dashboard > API Keys. Leave blank to try Damira on the shared demo key (50 queries/day).",
+      "sensitive": true,
+      "required": false
+    },
+    "execution_mode": {
+      "type": "string",
+      "title": "Execution mode",
+      "description": "advisor recommends commands for you to run and never touches a device. guided and lab allow Damira to run read-only show commands itself. Leave on advisor unless you are working in a lab.",
+      "default": "advisor",
+      "required": false
+    }
+  }
+}
