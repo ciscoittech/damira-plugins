@@ -1,6 +1,6 @@
 {
   "name": "damira",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "CCIE-level network operations — troubleshooting, upgrade planning, config audit, and device configuration for Cisco, Juniper, Arista, Palo Alto, and Fortinet",
   "author": {
     "name": "Damira AI"

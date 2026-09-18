@@ -62,6 +62,29 @@ class GatewayTimeoutIsFriendlyAndNonZero(unittest.TestCase):
         self.assertEqual(ctx.exception.code, damira.EXIT_GATEWAY_TIMEOUT)
 
 
+class UpgradeAndRateLimitErrorsPointAtWorkingPricingUrl(unittest.TestCase):
+    """#384 — damiraai.com/pricing 404s; the site only has a homepage anchor."""
+
+    def test_401_demo_key_error_uses_pricing_anchor(self):
+        with mock.patch("damira.resolve_key", return_value=("demo-key", True)), \
+             mock.patch("urllib.request.urlopen", side_effect=_http_error(401)):
+            with self.assertRaises(damira.DamiraError) as ctx:
+                damira.call("question", {})
+        self.assertIn("https://damiraai.com/#pricing", str(ctx.exception))
+        self.assertNotIn("damiraai.com/pricing\"", str(ctx.exception))
+
+    def test_429_rate_limit_error_uses_pricing_anchor(self):
+        with mock.patch("damira.resolve_key", return_value=("real-key", False)), \
+             mock.patch("urllib.request.urlopen", side_effect=_http_error(429)):
+            with self.assertRaises(damira.DamiraError) as ctx:
+                damira.call("question", {})
+        self.assertIn("https://damiraai.com/#pricing", str(ctx.exception))
+
+    def test_no_dead_pricing_url_anywhere_in_source(self):
+        source = (Path(__file__).resolve().parent.parent / "scripts" / "damira.py").read_text()
+        self.assertNotIn("damiraai.com/pricing", source)
+
+
 class NormalAnswerExitsZero(unittest.TestCase):
     def test_normal_answer_returns_and_main_exits_zero(self):
         with mock.patch("urllib.request.urlopen",

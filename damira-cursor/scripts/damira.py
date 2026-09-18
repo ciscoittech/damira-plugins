@@ -38,7 +38,7 @@ DEFAULT_API_URL = "https://damiraai.com"
 DEMO_KEY = "dm_demo_mcp"
 CONFIG_PATH = Path.home() / ".damira" / "config"
 TIMEOUT = 300
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 
 # Exit codes. 1 stays the catch-all (auth, rate limit, network) so existing scripts that
 # just check "non-zero" keep working. 2 and 3 exist so an agent (or a human) can tell "no
@@ -162,14 +162,14 @@ def call(message: str, context: dict) -> str:
         if exc.code == 401:
             if is_demo:
                 raise DamiraError("demo key not recognised. Get your own key at "
-                    "https://damiraai.com/pricing")
+                    "https://damiraai.com/#pricing")
             raise DamiraError("invalid API key. Get one at https://damiraai.com/dashboard/api-keys "
                 "and export DAMIRA_API_KEY, or write it to ~/.damira/config")
         if exc.code == 429:
             if is_demo:
                 raise DamiraError("demo limit reached (50/day). Unlimited access at "
-                    "https://damiraai.com/pricing")
-            raise DamiraError("rate limit exceeded. Upgrade at https://damiraai.com/pricing")
+                    "https://damiraai.com/#pricing")
+            raise DamiraError("rate limit exceeded. Upgrade at https://damiraai.com/#pricing")
         if exc.code in (504, 524):
             # 504 = the gateway's own timeout (JSON body); 524 = Cloudflare gave up in
             # front of it (HTML body, hence not even trying to parse `detail` as JSON).
