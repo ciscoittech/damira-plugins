@@ -2,10 +2,27 @@
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "damira",
   "version": "0.2.4",
-  "description": "CCIE-level network operations — troubleshooting, upgrade planning, config audit, and device configuration for Cisco, Juniper, Arista, Palo Alto, and Fortinet",
+  "description": "CCIE-level network operations \u2014 troubleshooting, upgrade planning, config audit, and device configuration for Cisco, Juniper, Arista, Palo Alto, and Fortinet",
   "author": {
     "name": "Damira AI"
   },
+  "homepage": "https://damiraai.com",
+  "repository": "https://github.com/ciscoittech/damira-plugins",
+  "license": "MIT",
+  "keywords": [
+    "network-engineering",
+    "networking",
+    "troubleshooting",
+    "cisco",
+    "juniper",
+    "arista",
+    "palo-alto",
+    "fortinet",
+    "bgp",
+    "ospf",
+    "noc",
+    "ccie"
+  ],
   "userConfig": {
     "api_key": {
       "type": "string",
