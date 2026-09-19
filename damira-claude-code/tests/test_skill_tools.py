@@ -30,12 +30,16 @@ def _allowed_tools():
 def test_every_allowed_tool_exists_in_the_bundled_server():
     for skill, names in _allowed_tools():
         for name in names:
+            if not name.startswith("mcp__"):
+                continue  # built-in tools (Bash, AskUserQuestion) aren't the server's
             tool = name.rsplit("__", 1)[-1]
             assert tool in CATALOG, f"{skill}: {name} is not a tool the server exposes"
 
 
 def test_every_skill_pre_approves_the_plugin_installed_names():
     for skill, names in _allowed_tools():
+        if not any(n.startswith("mcp__") for n in names):
+            continue  # skill uses no Damira tools (e.g. init)
         assert any(n.startswith(PLUGIN_PREFIX) for n in names), skill
         for name in names:
             if name.startswith("mcp__damira__"):

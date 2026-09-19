@@ -60,6 +60,19 @@ Verify:
 ~/.damira/bin/damira whoami
 ```
 
+## Setting up a project
+
+Ask the agent to "set up a Damira workspace" (the `damira-init` skill), or run
+it yourself:
+
+```bash
+~/.damira/bin/damira init --vendor Cisco --platform "Core: Catalyst 9300, IOS-XE 17.9.4"
+```
+
+It creates `configs/` (git-ignored), `documents/` and `notes/`, and writes a
+marked Damira block with your network details into `AGENTS.md`. Re-running
+replaces only that block.
+
 ## MCP (optional)
 
 ```bash

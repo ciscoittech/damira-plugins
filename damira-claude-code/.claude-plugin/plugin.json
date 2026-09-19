@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "damira",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "CCIE-level network operations — troubleshooting, upgrade planning, config audit, and device configuration for Cisco, Juniper, Arista, Palo Alto, and Fortinet",
   "author": {
     "name": "Damira AI"

@@ -38,7 +38,7 @@ DEFAULT_API_URL = "https://damiraai.com"
 DEMO_KEY = "dm_demo_mcp"
 CONFIG_PATH = Path.home() / ".damira" / "config"
 TIMEOUT = 300
-VERSION = "0.2.3"
+VERSION = "0.2.4"
 
 # Exit codes. 1 stays the catch-all (auth, rate limit, network) so existing scripts that
 # just check "non-zero" keep working. 2 and 3 exist so an agent (or a human) can tell "no
@@ -355,6 +355,137 @@ def cmd_install_mcp(a) -> str:
     return "\n".join(out)
 
 
+# --- init: set a folder up as a Damira workspace ---------------------------
+
+INIT_BEGIN = "<!-- damira:begin -->"
+INIT_END = "<!-- damira:end -->"
+INIT_DIRS = ("configs", "documents", "notes")
+INIT_TARGETS = {"claude": ("CLAUDE.md",), "cursor": ("AGENTS.md",), "both": ("CLAUDE.md", "AGENTS.md")}
+
+_INIT_BODY = """{begin}
+<!-- Written by `damira init`. Re-running it replaces only this block; anything
+     outside it is yours. Change the Environment answers by re-running init. -->
+
+# Network operations with Damira
+
+Damira supplies network domain data: vendor documentation, CVE records,
+release-note caveats, structured diagnoses and upgrade assessments. You write
+the deliverables from it.
+
+## When to use Damira
+- Anything version-specific (CLI syntax on a release, known bugs, upgrade
+  paths): Damira's upgrade-plan, release-notes and vendor-docs lookups.
+- CVEs and security advisories: Damira's CVE lookup.
+- An active fault with symptoms or `show` output: Damira troubleshoot. Send the
+  whole problem statement and every output collected so far on each call.
+- A config in `configs/`: Damira config audit. It runs locally.
+- General protocol questions: answer them yourself.
+
+If a Damira lookup comes back with no authoritative source, say so. Don't fill
+the gap from memory.
+
+## Devices
+Advisor mode: never connect to network devices. Give the engineer the exact
+commands and ask them to paste the output back.
+
+## Where things go
+- `configs/`: device configs to audit. Git-ignored; strip secrets anyway.
+- `documents/`: MOPs, change controls, runbooks, incident reports. Only write
+  what Damira data backs up.
+- `notes/`: research notes and incident timelines.
+
+## Document standards
+- MOP: purpose, scope, prerequisites, numbered steps with expected output,
+  verification, rollback, sign-off.
+- Change control: RFC fields, risk, implementation summary, backout plan, CAB
+  checklist.
+- Runbook: trigger, diagnostic decision tree, resolution per cause, escalation.
+- Incident report: timeline, impact, root cause, corrective actions.
+
+## Environment
+{environment}
+{end}
+"""
+
+_INIT_README = """# Network operations workspace
+
+Set up by `damira init`.
+
+- `configs/`: device configs to audit (git-ignored)
+- `documents/`: MOPs, change controls, runbooks, incident reports
+- `notes/`: research notes and incident timelines
+
+Try:
+- "Audit the config in configs/core-rtr-01.cfg"
+- "Plan the IOS-XE upgrade from 17.6.5 to 17.12.4 for our core switches"
+- "Known bugs and CVEs in PAN-OS 11.1?"
+- "BGP to the ISP keeps flapping. Here's the show output: ..."
+"""
+
+
+def _init_environment(a) -> str:
+    rows = [
+        ("Vendors", ", ".join(a.vendor)),
+        ("Environment", a.environment),
+        ("Change management", a.change_mgmt),
+        ("Ticketing", a.ticketing),
+        ("Naming convention", a.naming),
+    ]
+    lines = [f"- {k}: {v}" for k, v in rows if v]
+    if a.platform:
+        lines.append("- Platforms:")
+        lines.extend(f"  - {p}" for p in a.platform)
+    return "\n".join(lines) or "- Not set yet. Re-run `damira init` with your vendors and platforms."
+
+
+def _init_write_block(path: Path, block: str) -> str:
+    """Insert or replace the managed block; never touch anything outside it."""
+    if not path.exists():
+        path.write_text(block, encoding="utf-8")
+        return "created"
+    text = path.read_text(encoding="utf-8")
+    if INIT_BEGIN in text and INIT_END in text:
+        start = text.index(INIT_BEGIN)
+        end = text.index(INIT_END) + len(INIT_END)
+        new = text[:start] + block.rstrip("\n") + text[end:]
+        if new == text:
+            return "unchanged"
+        path.write_text(new, encoding="utf-8")
+        return "updated"
+    sep = "" if text.endswith("\n\n") else ("\n" if text.endswith("\n") else "\n\n")
+    path.write_text(text + sep + block, encoding="utf-8")
+    return "appended to existing file"
+
+
+def cmd_init(a) -> str:
+    root = Path(a.dir).expanduser().resolve()
+    root.mkdir(parents=True, exist_ok=True)
+    report = []
+
+    for d in INIT_DIRS:
+        target = root / d
+        report.append(f"{d}/: {'exists' if target.is_dir() else 'created'}")
+        target.mkdir(exist_ok=True)
+
+    # Device configs carry secrets; keep them out of git by default.
+    ignore = root / "configs" / ".gitignore"
+    if not ignore.exists():
+        ignore.write_text("# Device configs carry secrets. Nothing here is committed.\n*\n!.gitignore\n",
+                          encoding="utf-8")
+        report.append("configs/.gitignore: created")
+
+    block = _INIT_BODY.format(begin=INIT_BEGIN, end=INIT_END, environment=_init_environment(a))
+    for name in INIT_TARGETS[a.target]:
+        report.append(f"{name}: {_init_write_block(root / name, block)}")
+
+    readme = root / "README.md"
+    if not readme.exists():
+        readme.write_text(_INIT_README, encoding="utf-8")
+        report.append("README.md: created")
+
+    return f"Damira workspace ready in {root}\n" + "\n".join(f"  {r}" for r in report)
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="damira",
@@ -402,6 +533,19 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--target", default="cursor", choices=["cursor", "claude-desktop", "all"])
     s.add_argument("--force", action="store_true", help="Overwrite an existing 'damira' entry")
     s.set_defaults(func=cmd_install_mcp)
+
+    s = sub.add_parser("init", help="Set up a folder as a Damira network-operations workspace")
+    s.add_argument("--dir", default=".", help="workspace folder (default: current)")
+    s.add_argument("--target", default="both", choices=sorted(INIT_TARGETS),
+                   help="which agent's instructions file to write (CLAUDE.md, AGENTS.md, or both)")
+    s.add_argument("--vendor", action="append", default=[], help="repeatable, e.g. --vendor Cisco")
+    s.add_argument("--platform", action="append", default=[],
+                   help='repeatable, e.g. --platform "Core switches: Catalyst 9300, IOS-XE 17.9.4"')
+    s.add_argument("--environment", default="", help="production, lab, or both")
+    s.add_argument("--change-mgmt", default="", help="e.g. ITIL with weekly CAB")
+    s.add_argument("--ticketing", default="", help="e.g. ServiceNow")
+    s.add_argument("--naming", default="", help="e.g. SITE-ROLE-NN (CHI-RTR-01)")
+    s.set_defaults(func=cmd_init)
 
     return p
 

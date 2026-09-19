@@ -25,6 +25,14 @@ When you enable the plugin, Claude Code asks for two settings:
 Needs Python 3 (`python3 --version`). No pip, no uvx: everything runs on the standard
 library.
 
+## Set up a project
+
+Run `/damira:init` once in a new project folder. It asks which vendors,
+platforms and versions you run and how changes get approved, then creates
+`configs/` (kept out of git, since configs carry secrets), `documents/` and
+`notes/`, and records your network in `CLAUDE.md` so every chat starts with that
+context. Re-running updates your answers without touching the rest of the file.
+
 ## What's in the box
 
 | Skill | What it does |
