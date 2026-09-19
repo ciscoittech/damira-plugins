@@ -16,14 +16,19 @@ It covers two paths, because covering only the first leaves the sanctioned one o
 
 FAIL CLOSED. Claude Code treats every exit code except 2 as non-blocking, including
 1 — so an unhandled Python traceback would let SSH through while the user still
-believes advisor mode is enforced. Every failure path here therefore exits 2, and
-the only exit 0 is a positive determination that the call is safe.
+believes advisor mode is enforced. Every failure path here therefore exits 2.
+
+Damira's own device tools are denied outright in advisor mode. A shell ssh/telnet/nc
+is instead handed to the user to approve, because that is their terminal and not
+every host is network gear — a blanket block broke ordinary server work as soon as
+the plugin was installed. Set device_gate to "strict" to block those too.
 
 Shell matching is best-effort by nature; obfuscation can defeat it. It is a floor,
 not a proof.
 """
 
 import json
+import os
 import re
 import sys
 
@@ -53,9 +58,36 @@ _DENY_REASON = (
 )
 
 
+_ASK_REASON = (
+    "Damira is in advisor mode: it recommends commands and never runs them on network "
+    "devices itself. This is your own shell, so it's your call — approve it if this "
+    "host isn't network gear. Damira's own device tools stay blocked either way."
+)
+
+
 def _deny(reason: str) -> None:
     print(reason, file=sys.stderr)
     sys.exit(2)
+
+
+def _ask(reason: str) -> None:
+    """Hand the decision to the user instead of blocking outright.
+
+    A shell `ssh` is not necessarily a network device: engineers reach servers,
+    jump hosts and their own VPS the same way, and a hard block made the plugin
+    break their terminal the moment it was installed. Asking keeps the agent from
+    reaching a device on its own — which is the actual guarantee — while leaving
+    the engineer in charge of their own shell. Damira's device tools still fail
+    closed, and DEVICE_GATE=strict restores the hard block here too.
+    """
+    print(json.dumps({
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "ask",
+            "permissionDecisionReason": reason,
+        }
+    }))
+    sys.exit(0)
 
 
 def main() -> None:
@@ -65,7 +97,6 @@ def main() -> None:
     # Read the mode from the environment rather than the event: userConfig values are
     # exported as CLAUDE_PLUGIN_OPTION_*, and shell-form hook commands cannot take
     # ${user_config.*} substitution.
-    import os
 
     mode = os.environ.get("CLAUDE_PLUGIN_OPTION_EXECUTION_MODE", "advisor").strip().lower()
     elevated = mode in _ELEVATED_MODES
@@ -83,7 +114,9 @@ def main() -> None:
         if isinstance(command, str) and _DEVICE_CMD.search(command):
             if elevated:
                 sys.exit(0)
-            _deny(_DENY_REASON)
+            if os.environ.get("CLAUDE_PLUGIN_OPTION_DEVICE_GATE", "ask").strip().lower() == "strict":
+                _deny(_DENY_REASON)
+            _ask(_ASK_REASON)
 
     # Not a device-execution call.
     sys.exit(0)

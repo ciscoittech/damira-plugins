@@ -38,7 +38,7 @@ DEFAULT_API_URL = "https://damiraai.com"
 DEMO_KEY = "dm_demo_mcp"
 CONFIG_PATH = Path.home() / ".damira" / "config"
 TIMEOUT = 300
-VERSION = "0.2.4"
+VERSION = "0.2.5"
 
 # Exit codes. 1 stays the catch-all (auth, rate limit, network) so existing scripts that
 # just check "non-zero" keep working. 2 and 3 exist so an agent (or a human) can tell "no

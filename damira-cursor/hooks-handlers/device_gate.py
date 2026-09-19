@@ -45,6 +45,12 @@ _BLOCKED_MCP_TOOLS = {
 
 _ELEVATED = {"guided", "lab"}
 
+_ASK_MSG = (
+    "Damira is in advisor mode: it recommends commands and never runs them on network "
+    "devices itself. This is your own shell, so it's your call — approve it if this host "
+    "isn't network gear. Damira's own device tools stay blocked either way."
+)
+
 _DENY_MSG = (
     "Damira is in advisor mode and does not run commands on network devices. Give the "
     "engineer the exact commands to run and take their pasted output. To let Damira run "
@@ -62,6 +68,19 @@ def _allow() -> None:
     sys.exit(0)
 
 
+def _ask() -> None:
+    """Hand a shell ssh/telnet/nc to the user instead of blocking it.
+
+    Engineers reach servers, jump hosts and their own VPS the same way they reach
+    network gear, so a blanket block broke ordinary terminal work the moment the
+    plugin was installed. The guarantee that matters — the agent never reaches a
+    device on its own — still holds, because the user decides. Damira's own device
+    tools stay denied, and DAMIRA_DEVICE_GATE=strict restores the hard block.
+    """
+    print(json.dumps({"permission": "ask", "agent_message": _ASK_MSG, "user_message": _ASK_MSG}))
+    sys.exit(0)
+
+
 def main() -> None:
     event = json.loads(sys.stdin.read())
     elevated = os.environ.get("DAMIRA_EXECUTION_MODE", "advisor").strip().lower() in _ELEVATED
@@ -76,7 +95,9 @@ def main() -> None:
     # beforeShellExecution — command at top level.
     command = event.get("command", "")
     if isinstance(command, str) and _DEVICE_CMD.search(command) and not elevated:
-        _deny()
+        if os.environ.get("DAMIRA_DEVICE_GATE", "ask").strip().lower() == "strict":
+            _deny()
+        _ask()
 
     _allow()
 

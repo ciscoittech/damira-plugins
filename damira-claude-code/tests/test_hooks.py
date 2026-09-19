@@ -33,15 +33,18 @@ BLOCK = 2
 ALLOW = 0
 
 
-def run_hook(script: Path, payload, mode: str = "advisor"):
+def run_hook(script: Path, payload, mode: str = "advisor", gate: str = ""):
     """Run a hook handler the way Claude Code does: JSON on stdin, exit code out."""
     stdin = payload if isinstance(payload, str) else json.dumps(payload)
+    env = {"CLAUDE_PLUGIN_OPTION_EXECUTION_MODE": mode, "PATH": "/usr/bin:/bin"}
+    if gate:
+        env["CLAUDE_PLUGIN_OPTION_DEVICE_GATE"] = gate
     proc = subprocess.run(
         [sys.executable, str(script)],
         input=stdin,
         capture_output=True,
         text=True,
-        env={"CLAUDE_PLUGIN_OPTION_EXECUTION_MODE": mode, "PATH": "/usr/bin:/bin"},
+        env=env,
     )
     return proc.returncode, proc.stdout, proc.stderr
 
@@ -60,14 +63,27 @@ def run_hook(script: Path, payload, mode: str = "advisor"):
         "ssh -J jump admin@10.0.0.1",
     ],
 )
-def test_device_gate_blocks_shell_paths_in_advisor(command):
+def test_device_gate_asks_before_shell_device_access(command):
     """The sanctioned workflow reaches devices via the terminal, so Bash must be gated.
 
-    A gate matching only the MCP tool names would block the path nobody uses and miss
-    the one the product documentation actually tells the model to use.
+    It asks rather than blocks: an engineer's shell ssh is as likely to be a server
+    or jump host as network gear, and a blanket block broke ordinary terminal work
+    the moment the plugin was installed. The agent still can't reach a device on its
+    own — the user decides.
     """
-    code, _, err = run_hook(DEVICE_GATE, {"tool_name": "Bash", "tool_input": {"command": command}})
-    assert code == BLOCK, f"advisor mode must block: {command}"
+    code, out, _ = run_hook(DEVICE_GATE, {"tool_name": "Bash", "tool_input": {"command": command}})
+    assert code == ALLOW, f"must not hard-block the user's own shell: {command}"
+    decision = json.loads(out)["hookSpecificOutput"]
+    assert decision["hookEventName"] == "PreToolUse"
+    assert decision["permissionDecision"] == "ask", command
+    assert "advisor mode" in decision["permissionDecisionReason"].lower()
+
+
+@pytest.mark.parametrize("command", ["ssh admin@10.0.0.1", "telnet 10.0.0.1"])
+def test_strict_mode_restores_the_hard_block(command):
+    code, _, err = run_hook(DEVICE_GATE, {"tool_name": "Bash", "tool_input": {"command": command}},
+                            gate="strict")
+    assert code == BLOCK
     assert "advisor mode" in err.lower()
 
 
@@ -82,6 +98,8 @@ def test_device_gate_blocks_shell_paths_in_advisor(command):
     ],
 )
 def test_device_gate_blocks_mcp_tools_in_advisor(tool):
+    """Damira's own device tools are never merely asked about: the product claim is
+    that the agent cannot drive a device itself."""
     code, _, _ = run_hook(DEVICE_GATE, {"tool_name": tool, "tool_input": {"host": "10.0.0.1"}})
     assert code == BLOCK
 

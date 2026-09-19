@@ -1,7 +1,7 @@
 {
   "name": "damira",
-  "version": "0.2.4",
-  "description": "CCIE-level network operations — troubleshooting, upgrade planning, config audit, and device configuration for Cisco, Juniper, Arista, Palo Alto, and Fortinet",
+  "version": "0.2.5",
+  "description": "CCIE-level network operations \u2014 troubleshooting, upgrade planning, config audit, and device configuration for Cisco, Juniper, Arista, Palo Alto, and Fortinet",
   "author": {
     "name": "Damira AI"
   },
@@ -28,14 +28,28 @@
       "DAMIRA_API_KEY": {
         "type": "string",
         "title": "Damira API key",
-        "description": "From damiraai.com > Dashboard > API Keys. Leave blank to try Damira on the shared demo key (50 queries/day). NOTE: the plugin's scripts read this from your shell environment, so you must also export it — see the README."
+        "description": "From damiraai.com > Dashboard > API Keys. Leave blank to try Damira on the shared demo key (50 queries/day). NOTE: the plugin's scripts read this from your shell environment, so you must also export it \u2014 see the README."
       },
       "DAMIRA_EXECUTION_MODE": {
         "type": "string",
         "title": "Execution mode",
         "description": "advisor recommends commands for you to run and never touches a device. guided and lab allow Damira to run read-only show commands itself. Leave on advisor unless you are working in a lab.",
-        "enum": ["advisor", "guided", "lab"],
+        "enum": [
+          "advisor",
+          "guided",
+          "lab"
+        ],
         "default": "advisor"
+      },
+      "DAMIRA_DEVICE_GATE": {
+        "type": "string",
+        "title": "Shell device gate",
+        "description": "ask (default) prompts you before the agent runs ssh/telnet/nc in your shell, since not every host is network gear. strict blocks them outright. Damira's own device tools are always blocked in advisor mode.",
+        "enum": [
+          "ask",
+          "strict"
+        ],
+        "default": "ask"
       }
     },
     "required": []

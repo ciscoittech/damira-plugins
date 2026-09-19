@@ -45,9 +45,10 @@ context. Re-running updates your answers without touching the rest of the file.
 
 ## Your AI never touches your devices
 
-In advisor mode a hook blocks the agent from reaching network gear: `ssh`, `telnet` and
-`nc` through the shell, and Damira's own device tools. If the hook can't evaluate a call,
-it blocks it. A second hook stops the agent from writing a MOP or runbook into
+In advisor mode a hook stops the agent reaching network gear on its own. Damira's own
+device tools are blocked outright. A shell `ssh`, `telnet` or `nc` is handed to you to
+approve, because not every host is network gear — set **device_gate** to `strict` to block
+those too. If the hook can't evaluate a call, it blocks it. A second hook stops the agent from writing a MOP or runbook into
 `documents/` when no Damira lookup in the session backs it up.
 
 Config audits run on your machine, so your configs never leave it.

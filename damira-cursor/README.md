@@ -73,6 +73,14 @@ It creates `configs/` (git-ignored), `documents/` and `notes/`, and writes a
 marked Damira block with your network details into `AGENTS.md`. Re-running
 replaces only that block.
 
+## The device gate
+
+In advisor mode Damira's own device tools are denied outright. A shell
+`ssh`/`telnet`/`nc` is handed to you to approve instead of being blocked —
+engineers reach servers and jump hosts the same way they reach network gear, and
+a blanket block breaks ordinary terminal work. Set `DAMIRA_DEVICE_GATE=strict` to
+block those too.
+
 ## MCP (optional)
 
 ```bash
@@ -120,7 +128,7 @@ is **not** visible to the agent's shell, so a skill cannot reference it.
 | `scripts/damira.py` | 6 subcommands → `POST /api/extension/agent/chat-sync`. Stdlib only. |
 | `scripts/audit_config.py` | Regex config audit. **Runs locally — config text never leaves the machine.** |
 | `rules/damira.mdc` | Always-on: division of labour, when to call, error contract, advisor posture |
-| `hooks-handlers/device_gate.py` | `beforeShellExecution` — blocks SSH/telnet in advisor mode, fail-closed |
+| `hooks-handlers/device_gate.py` | `beforeShellExecution` — asks before SSH/telnet in advisor mode (`strict` blocks), fail-closed |
 | `hooks-handlers/session_start.py` | Installs shims, warns on missing key, exports execution mode |
 | `skills/` (6) | troubleshoot, upgrade-plan, config-audit, generate-config, generate-playbook, generate-lab |
 
@@ -180,5 +188,5 @@ manifest has no `permissions` field.
 ~/.damira/bin/damira whoami
 ~/.damira/bin/damira --help
 printf 'hostname r1\nenable password x\n' | ~/.damira/bin/damira-audit-config -
-echo '{"command":"ssh admin@10.0.0.1"}' | python3 hooks-handlers/device_gate.py   # → deny
+echo '{"command":"ssh admin@10.0.0.1"}' | python3 hooks-handlers/device_gate.py   # → ask
 ```
