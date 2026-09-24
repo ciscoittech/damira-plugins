@@ -16,9 +16,11 @@ looks: a tier refusal returned inside a 200 body once produced a fabricated 371-
 upgrade MOP that reported itself as successful.
 
 Auth resolution order:
-  1. DAMIRA_API_KEY environment variable
-  2. ~/.damira/config  (INI-ish `key = value`, or a bare key on the first line)
-  3. the shared demo key — 50 queries/day, so people can try it before signing up
+  1. DAMIRA_PLUGIN_API_KEY — Claude Code's plugin setting, passed in by .mcp.json
+  2. DAMIRA_API_KEY environment variable
+  3. ~/.damira/config  (INI-ish `key = value`, or a bare key on the first line)
+  4. the shared demo key — 50 queries/day, so people can try it before signing up.
+     Every answer served on it starts with DEMO_NOTICE.
 
 Cursor's agent shell inherits the parent process environment, which is why (1) works.
 Note that env returned by a sessionStart hook does NOT reach the shell — verified
@@ -37,8 +39,15 @@ from pathlib import Path
 DEFAULT_API_URL = "https://damiraai.com"
 DEMO_KEY = "dm_demo_mcp"
 CONFIG_PATH = Path.home() / ".damira" / "config"
+# Claude Code passes the plugin's API key setting under its own name, so a blank
+# setting can't overwrite a DAMIRA_API_KEY the user exported (#452).
+PLUGIN_KEY_ENV = "DAMIRA_PLUGIN_API_KEY"
+DEMO_NOTICE = (
+    "[Damira is running on the shared demo key (50 queries/day). Tell the user this, "
+    "and that they can add their own key: https://damiraai.com/docs/install#api-key]"
+)
 TIMEOUT = 300
-VERSION = "0.2.5"
+VERSION = "0.2.6"
 
 # Exit codes. 1 stays the catch-all (auth, rate limit, network) so existing scripts that
 # just check "non-zero" keep working. 2 and 3 exist so an agent (or a human) can tell "no
@@ -96,11 +105,20 @@ def die(msg: str, code: int = EXIT_ERROR) -> "None":
     sys.exit(code)
 
 
-def resolve_key() -> "tuple[str, bool]":
-    """Return (api_key, is_demo)."""
-    key = os.environ.get("DAMIRA_API_KEY", "").strip()
+def _env_key(name: str) -> str:
+    value = os.environ.get(name, "").strip()
+    # An unsubstituted "${user_config.api_key}" is not a key.
+    return "" if value.startswith("${") else value
+
+
+def resolve_key_source() -> "tuple[str, str]":
+    """Return (api_key, source). Order: plugin setting, DAMIRA_API_KEY, config file, demo."""
+    key = _env_key(PLUGIN_KEY_ENV)
     if key:
-        return key, False
+        return key, "plugin setting"
+    key = _env_key("DAMIRA_API_KEY")
+    if key:
+        return key, "DAMIRA_API_KEY"
 
     if CONFIG_PATH.is_file():
         try:
@@ -113,13 +131,19 @@ def resolve_key() -> "tuple[str, bool]":
                     if name.strip().upper() in ("DAMIRA_API_KEY", "API_KEY", "KEY"):
                         value = value.strip().strip("\"'")
                         if value:
-                            return value, False
+                            return value, str(CONFIG_PATH)
                 else:
-                    return line, False
+                    return line, str(CONFIG_PATH)
         except OSError:
             pass  # fall through to the demo key rather than hard-failing on a config read
 
-    return DEMO_KEY, True
+    return DEMO_KEY, "demo"
+
+
+def resolve_key() -> "tuple[str, bool]":
+    """Return (api_key, is_demo)."""
+    key, source = resolve_key_source()
+    return key, source == "demo"
 
 
 def call(message: str, context: dict) -> str:
@@ -164,7 +188,7 @@ def call(message: str, context: dict) -> str:
                 raise DamiraError("demo key not recognised. Get your own key at "
                     "https://damiraai.com/#pricing")
             raise DamiraError("invalid API key. Get one at https://damiraai.com/dashboard/api-keys "
-                "and export DAMIRA_API_KEY, or write it to ~/.damira/config")
+                "and set it in the plugin settings, DAMIRA_API_KEY or ~/.damira/config")
         if exc.code == 429:
             if is_demo:
                 raise DamiraError("demo limit reached (50/day). Unlimited access at "
@@ -202,6 +226,9 @@ def call(message: str, context: dict) -> str:
             if marker in response:
                 raise DamiraError(f"request refused by the service, this is not an answer — {response}")
 
+    # The session hook's note alone didn't reach users (#452); put it in every answer.
+    if is_demo:
+        return f"{DEMO_NOTICE}\n\n{response}"
     return response
 
 
@@ -269,18 +296,19 @@ def cmd_agent(a) -> str:
 
 
 def cmd_whoami(a) -> str:
-    key, is_demo = resolve_key()
+    key, source = resolve_key_source()
+    is_demo = source == "demo"
     masked = f"{key[:8]}…{key[-4:]}" if len(key) > 14 else key
-    source = "demo key (50 queries/day)" if is_demo else (
-        "DAMIRA_API_KEY" if os.environ.get("DAMIRA_API_KEY", "").strip() else str(CONFIG_PATH)
-    )
+    if is_demo:
+        source = "demo key (50 queries/day)"
     url = os.environ.get("DAMIRA_API_URL", DEFAULT_API_URL)
     mode = os.environ.get("DAMIRA_EXECUTION_MODE", "advisor")
     lines = [f"key:      {masked}", f"source:   {source}", f"endpoint: {url}", f"mode:     {mode}"]
     if is_demo:
         lines.append("")
         lines.append("Using the shared demo key. For your own: https://damiraai.com/dashboard/api-keys")
-        lines.append("Then: export DAMIRA_API_KEY=... (or write it to ~/.damira/config)")
+        lines.append("Then set it in the plugin settings (Claude Code: /plugin configure damira@damira-plugins),")
+        lines.append("export DAMIRA_API_KEY=..., or write it to ~/.damira/config")
     return "\n".join(lines)
 
 

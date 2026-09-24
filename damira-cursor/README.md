@@ -45,8 +45,13 @@ Or write it to `~/.damira/config`:
 DAMIRA_API_KEY = oncall_sk_...
 ```
 
-Without a key it falls back to a shared demo key (50 queries/day) so you can try it first.
-Get your own at https://damiraai.com/dashboard/api-keys.
+Without a key it falls back to a shared demo key (50 queries/day) so you can try it first,
+and every answer on it starts with a note saying so. Get your own at
+https://damiraai.com/dashboard/api-keys. `DAMIRA_API_KEY` wins over `~/.damira/config`.
+Restart Cursor after exporting, then check with `~/.damira/bin/damira whoami`, which prints
+the masked key and where it came from.
+
+Full guide: [damiraai.com/docs/install#api-key](https://damiraai.com/docs/install#api-key).
 
 > **Why not the plugin's `variables` prompt?** Cursor's `variables` values do reach
 > `mcp.json` and hook configs, but **not** the agent's shell — verified 2026-08-08 — and
@@ -172,11 +177,6 @@ manifest has no `permissions` field.
 
 ## Known issues
 
-- **The shared demo key is currently broken in production.** It resolves to
-  `meta-llama/llama-3.3-70b-instruct:free`, which the tier gate rejects, so every demo
-  call returns a plan refusal. The client surfaces this correctly as an error rather than
-  as data, but "try before signup" does not work until the tier mapping is fixed. Related:
-  #355.
 - `variables` interpolation is unverified under a real marketplace install — `--plugin-dir`
   has no UI to supply values, so the test could not distinguish "unsupported" from "no
   value available" (#358 Task 0.4).

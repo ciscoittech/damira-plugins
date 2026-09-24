@@ -111,7 +111,8 @@ def test_partial_no_answer_inside_a_real_answer_is_still_an_answer():
     body = ("## Indexed vendor documentation\n\ndocs\n## Live web results\n\n"
             + damira.NO_AUTHORITATIVE_RESULTS)
     with mock.patch("urllib.request.urlopen", return_value=_fake_response({"response": body})):
-        assert damira.call("Search vendor docs: x", {"mcp_tool": "search_vendor_docs"}) == body
+        # endswith: on the demo key the answer is prefixed with DEMO_NOTICE (#452).
+        assert damira.call("Search vendor docs: x", {"mcp_tool": "search_vendor_docs"}).endswith(body)
 
 
 def test_no_internal_methodology_names_ship_in_the_plugin():

@@ -16,10 +16,22 @@ Never prints the key. Hook stdout becomes model context and flows on to tracing.
 import json
 import os
 import sys
+from pathlib import Path
+
+
+def _has_fallback_key() -> bool:
+    """Same fallbacks the client uses when the plugin setting is blank (#452)."""
+    if os.environ.get("DAMIRA_API_KEY", "").strip():
+        return True
+    config = Path.home() / ".damira" / "config"
+    try:
+        return config.is_file() and bool(config.read_text(encoding="utf-8").strip())
+    except OSError:
+        return False
 
 
 def main() -> None:
-    key = os.environ.get("CLAUDE_PLUGIN_OPTION_API_KEY", "").strip()
+    key = os.environ.get("CLAUDE_PLUGIN_OPTION_API_KEY", "").strip() or _has_fallback_key()
     mode = os.environ.get("CLAUDE_PLUGIN_OPTION_EXECUTION_MODE", "advisor").strip().lower()
 
     notes = []

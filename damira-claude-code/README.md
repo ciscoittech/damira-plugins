@@ -13,7 +13,7 @@ In Claude Code:
 /plugin install damira@damira-plugins
 ```
 
-When you enable the plugin, Claude Code asks for two settings:
+When you enable the plugin, Claude Code asks for three settings:
 
 - **API key**: from [damiraai.com → Dashboard → API Keys](https://damiraai.com/dashboard/api-keys).
   It's stored in your system keychain, not in a settings file. Leave it blank to try Damira
@@ -21,9 +21,27 @@ When you enable the plugin, Claude Code asks for two settings:
 - **Execution mode**: leave on `advisor`. Damira recommends the exact commands and you
   run them. `guided` and `lab` let the agent run read-only `show` commands itself and are
   meant for lab gear only.
+- **Shell device gate**: `ask` (the default) hands you any `ssh`, `telnet` or `nc` the
+  agent wants to run. `strict` blocks them outright.
 
 Needs Python 3 (`python3 --version`). No pip, no uvx: everything runs on the standard
 library.
+
+## Set or change your API key
+
+- **Add or replace it:** `/plugin configure damira@damira-plugins`, paste the key, and
+  continue through every field until it confirms the save. Run it again to rotate.
+- **Scripted:** `claude plugin install damira@damira-plugins --config api_key=oncall_sk_…`
+  stores it the same way. Clear your shell history afterwards.
+- **Fallbacks when the setting is blank:** an exported `DAMIRA_API_KEY`, then
+  `~/.damira/config` (one line: `api_key = oncall_sk_…`). The plugin setting wins over both.
+
+**On the demo key, every answer starts with a note saying so.** If you still see it after
+adding your key, the key isn't reaching Damira: run `/plugin configure` again, and make sure
+you're on 0.2.6 or later (`/plugin marketplace update damira-plugins`). Before 0.2.6, an
+exported `DAMIRA_API_KEY` was ignored whenever the plugin setting was blank.
+
+Full guide: [damiraai.com/docs/install#api-key](https://damiraai.com/docs/install#api-key).
 
 ## Set up a project
 

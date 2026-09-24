@@ -4,7 +4,7 @@
       "command": "python3",
       "args": ["${CLAUDE_PLUGIN_ROOT}/mcp/server.py"],
       "env": {
-        "DAMIRA_API_KEY": "${user_config.api_key}",
+        "DAMIRA_PLUGIN_API_KEY": "${user_config.api_key}",
         "DAMIRA_EXECUTION_MODE": "${user_config.execution_mode}"
       }
     }

@@ -25,8 +25,9 @@ Then `/plugins` in the Cursor agent, or **Settings → Plugins** in the IDE, and
 ```
 
 Either way a shared demo key (50 queries/day) is built in, so it works immediately.
-Claude Code asks for your key and execution mode when you enable the plugin; leave the
-key blank for the demo key. The first time each Damira tool runs, Claude Code asks for
+Claude Code asks for your key, execution mode and shell device gate when you enable the
+plugin; leave the key blank for the demo key. Answers on the demo key say so. To add or
+change a key later, see [API key](https://damiraai.com/docs/install#api-key). The first time each Damira tool runs, Claude Code asks for
 permission — choose always-allow and it won't ask again.
 
 Ask it something real:
