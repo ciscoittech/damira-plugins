@@ -1,0 +1,10 @@
+[
+  {"output": true, "regex": "failed=0"},
+  {"command": "docker exec clab-{lab}-r1 vtysh -c 'show bgp summary json'",
+   "regex": "\"state\":\\s*\"Established\"", "wait_s": 60},
+  {"command": "docker exec clab-{lab}-r1 vtysh -c 'show ip route 10.2.2.2/32'",
+   "contains": "10.2.2.2/32", "wait_s": 30},
+  {"command": "docker exec clab-{lab}-r1 vtysh -c 'show running-config' | grep -c '^ntp server'",
+   "regex": "^2$"},
+  {"command": "cd tests && pyats run job lab_job.py --no-mail"}
+]

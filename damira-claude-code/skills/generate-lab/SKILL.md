@@ -1,6 +1,7 @@
 ---
 name: generate-lab
 description: Build a runnable ContainerLab topology with startup configs for testing or practice. Use when the user asks to lab up, simulate, reproduce, or practice a scenario — BGP convergence, OSPF multi-area, MPLS L3VPN, EVPN-VXLAN, leaf-spine — using containerised nodes (Arista cEOS, Juniper cRPD, Nokia SR Linux, FRR, VyOS). This emits ContainerLab YAML only: if the user specifically wants GNS3, EVE-NG, or Cisco CML, say so up front rather than substituting ContainerLab. To test a change in the lab before production, use lab-test-change.
+allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs, mcp__damira__damira_search_vendor_docs
 ---
 
 # ContainerLab Topology Generation
@@ -46,13 +47,9 @@ Per node: interfaces with addressing that matches the links, routing protocol co
 matching the lab's purpose, loopbacks for router-IDs, correct per-platform syntax
 (FRR uses `frr.conf`; SR Linux uses its own CLI/JSON).
 
-If unsure of syntax for a specific platform version (**if the lookup fails, say so**
-rather than guessing a command):
-
-```bash
-~/.damira/bin/damira search-vendor-docs \
-  "<feature> configuration <platform>" --vendor "<vendor>"
-```
+If unsure of syntax for a specific platform version, call `damira_search_vendor_docs`
+with `"<feature> configuration <platform>"` and the vendor. **If the lookup fails, say so**
+rather than guessing a command.
 
 ## Step 4: Save and validate
 
@@ -60,11 +57,11 @@ rather than guessing a command):
 - Configs: `labs/configs/{node-name}.cfg`
 - README: `labs/{lab-name}-README.md`
 
-The checker is `~/.damira/bin/damira lab validate`. It runs locally, needs no docker,
-and makes no API call.
+The checker ships in this plugin, two levels above this skill's base directory:
+`<plugin root>/scripts/damira.py`. It runs locally, needs no docker, and makes no API call.
 
 ```bash
-~/.damira/bin/damira lab validate labs/{lab-name}.clab.yml
+python3 "<plugin root>/scripts/damira.py" lab validate labs/{lab-name}.clab.yml
 ```
 
 Fix every error it names (undefined link endpoint, node without a kind, missing

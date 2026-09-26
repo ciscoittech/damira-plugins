@@ -47,7 +47,7 @@ DEMO_NOTICE = (
     "and that they can add their own key: https://damiraai.com/docs/install#api-key]"
 )
 TIMEOUT = 300
-VERSION = "0.3.1"
+VERSION = "0.3.2"
 
 # Exit codes. 1 stays the catch-all (auth, rate limit, network) so existing scripts that
 # just check "non-zero" keep working. 2 and 3 exist so an agent (or a human) can tell "no
@@ -623,6 +623,15 @@ def cmd_render(a) -> "None":
     sys.exit(golden.main_with_args(a))
 
 
+def cmd_lab(a) -> "None":
+    """Test a change in a ContainerLab lab before production (#477): preflight, validate,
+    or run (deploy, apply, checks, report, destroy). Runs locally; never calls the API."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import lab_run  # noqa: E402 — imported lazily, only for this subcommand
+
+    sys.exit(lab_run.main(a.args))
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="damira",
@@ -727,6 +736,13 @@ def build_parser() -> argparse.ArgumentParser:
                             "to .docx + a .html preview (run `damira docx -h`)")
     s.add_argument("args", nargs=argparse.REMAINDER)
     s.set_defaults(func=cmd_docx)
+
+    s = sub.add_parser("lab", add_help=False,
+                       help="Test a change in a ContainerLab lab: `lab preflight`, `lab validate "
+                            "topo.clab.yml`, `lab run topo.clab.yml --apply change.yml --checks "
+                            "lab.checks.json` (always destroys the lab)")
+    s.add_argument("args", nargs=argparse.REMAINDER)
+    s.set_defaults(func=cmd_lab)
 
     s = sub.add_parser("render", help="Render a golden config template (NTP, AAA/TACACS+, SNMPv3, "
                        "syslog, banner) for IOS, NX-OS, EOS or Junos")

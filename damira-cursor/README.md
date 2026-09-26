@@ -9,13 +9,18 @@ dependency-free:
 
 | Path | What you get | Setup |
 |---|---|---|
-| **Skills** (default) | 14 skills invoking bundled scripts | load the plugin |
+| **Skills** (default) | 15 skills invoking bundled scripts | load the plugin |
 | **MCP** (optional) | the same 7 tools as MCP, for Cursor / Claude Code / Claude Desktop / Windsurf | `damira install-mcp` |
 
 The MCP server is hand-rolled over stdio in the standard library, so adding it costs no
 dependencies. `damira-mcp` on PyPI is **not** required and is not used.
 
 Issues: [github.com/ciscoittech/damira-plugins/issues](https://github.com/ciscoittech/damira-plugins/issues).
+
+## What's new in 0.3.2
+
+- **Test a change in a lab first.** The new `lab-test-change` skill deploys a throwaway ContainerLab lab, applies your playbook or script, runs show-command or pyATS/Genie checks, reports pass/fail and always destroys the lab. It needs Docker and containerlab on your machine; without them it validates the change only and says so.
+- **`generate-lab` in Claude Code.** Building a ContainerLab topology for practice or testing, previously Cursor-only, is now in the Claude Code plugin too.
 
 ## What's new in 0.3.1
 
@@ -150,7 +155,7 @@ is **not** visible to the agent's shell, so a skill cannot reference it.
 | `rules/damira.mdc` | Always-on: division of labour, when to call, error contract, advisor posture |
 | `hooks-handlers/device_gate.py` | `beforeShellExecution` — asks before SSH/telnet in advisor mode (`strict` blocks), fail-closed |
 | `hooks-handlers/session_start.py` | Installs shims, warns on missing key, exports execution mode |
-| `skills/` (14) | troubleshoot, upgrade-plan, config-audit, generate-config, generate-lab, damira-init, and the generators generate-playbook, generate-automation, generate-terraform, generate-tests, generate-pipeline, generate-workbook, generate-diagram, source-of-truth-change |
+| `skills/` (15) | troubleshoot, upgrade-plan, config-audit, generate-config, generate-lab, damira-init, and the generators generate-playbook, generate-automation, generate-terraform, generate-tests, generate-pipeline, generate-workbook, generate-diagram, source-of-truth-change, lab-test-change |
 | `agents/` | damira-renderer and damira-fixer: small agents for the mechanical steps, so they can run on a cheap model |
 
 ## The error contract

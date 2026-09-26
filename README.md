@@ -53,6 +53,11 @@ Three more things engineers rightfully ask about:
   is told not to use it as source material. No confident documents built on failures.
 - **No hidden toolchain.** No PyPI, no pip, no uvx. Standard-library Python scripts only.
 
+## What's new in 0.3.2
+
+- **Test a change in a lab first.** The new `lab-test-change` skill deploys a throwaway ContainerLab lab, applies your playbook or script, runs show-command or pyATS/Genie checks, reports pass/fail and always destroys the lab. It needs Docker and containerlab on your machine; without them it validates the change only and says so.
+- **`generate-lab` in Claude Code.** Building a ContainerLab topology for practice or testing, previously Cursor-only, is now in the Claude Code plugin too.
+
 ## What's new in 0.3.1
 
 - **Source-of-truth changes.** The new `source-of-truth-change` skill turns intended state in NetBox or Nautobot into a validated change, then hands it to the automation you already run: an Ansible Automation Platform job in check mode, a pyATS/Genie before-and-after diff, or a Terraform plan.
@@ -84,6 +89,7 @@ Three more things engineers rightfully ask about:
 | `generate-workbook` | Excel workbooks (.xlsx) for migrations, audits and change control, with every command checked against the saved evidence |
 | `generate-diagram` | Topology diagrams from your configs and CDP/LLDP output: SVG, HTML preview, Mermaid and D2, optional PowerPoint slide |
 | `source-of-truth-change` | NetBox/Nautobot intent to a validated change, handed to an AAP check-mode job, a pyATS diff or a Terraform plan |
+| `lab-test-change` | Deploy a throwaway ContainerLab lab, apply the change, run checks, report pass/fail, always destroy the lab (needs Docker + containerlab) |
 
 **How the division of labor works:** Damira supplies the domain data — vendor docs, CVE
 lookups, version-specific caveats, structured diagnoses. Your AI assembles that into the
