@@ -1,0 +1,8 @@
+# Damira golden template: ntp (juniper_junos) — load with `load set terminal`
+{% for server in servers %}
+set system ntp server {{ server }}{% if loop.first %} prefer{% endif %}
+
+{% endfor %}
+{% if source_address is defined %}
+set system ntp source-address {{ source_address }}
+{% endif %}

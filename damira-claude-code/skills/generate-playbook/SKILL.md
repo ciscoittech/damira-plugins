@@ -1,61 +1,95 @@
 ---
 name: generate-playbook
-description: Write an Ansible playbook, inventory, and group_vars for a repeatable change across many network devices. Use when the user asks for Ansible by name, or asks how to push the same change to a fleet — VLANs, banners, NTP/AAA, config backup, compliance checks — using cisco.ios, cisco.nxos, arista.eos, junipernetworks.junos, paloaltonetworks.panos, or fortinet.fortios. Do not use if the user wants Python/Netmiko, Nornir, pyATS, or Terraform, and not for configuring a single device (use generate-config).
+description: Write an Ansible playbook, inventory, and group_vars for a repeatable change across many network devices, then validate it locally before handing it back. Use when the user asks for Ansible by name, or asks how to push the same change to a fleet — VLANs, banners, NTP/AAA, SNMPv3, config backup, compliance checks — using cisco.ios, cisco.nxos, arista.eos, juniper.device (Junos), paloaltonetworks.panos, or fortinet.fortios. For Python (Nornir/Netmiko/Scrapli) use generate-automation, for Terraform use generate-terraform, for pyATS/pytest checks use generate-tests, for a CI pipeline use generate-pipeline, and for a single device's config use generate-config.
 allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs, mcp__damira__damira_search_vendor_docs
 ---
 
-# Ansible Playbook Generation
+# Ansible playbook generation
 
-Generate production-ready Ansible playbooks for network automation.
+You write the playbook. Damira supplies the vendor facts and the gate: every playbook goes
+through `damira validate` before you hand it back.
 
-## Workflow
+## Step 1: Gather requirements
 
-### Step 1: Gather Requirements
+- **Task** — deploy VLANs, back up configs, push NTP/AAA/SNMPv3, compliance check
+- **Targets** — how many devices, what platform and OS version
+- **Variables** — VLAN IDs, interface names, server IPs
+- **Connection** — `network_cli` (SSH), `httpapi` (eAPI/NX-API), or `netconf`
 
-Ask the user for:
-- **Task** — what to automate (e.g., deploy VLANs, backup configs, upgrade firmware)
-- **Target devices** — how many, what type (e.g., 3x Arista 7050X, 10x Cisco C9300)
-- **Platform** — determines Ansible collection (cisco.ios, arista.eos, junipernetworks.junos)
-- **Variables** — any parameters (VLAN IDs, interface names, IP ranges)
+If the user named a different framework, use the sibling skill instead (see the description).
 
-### Step 2: Verify Module Syntax
+## Step 2: Look up the modules
 
-Call `damira_search_vendor_docs` to verify:
-- Correct Ansible collection and module names for the platform
-- Module parameters and syntax
-- Any version-specific considerations
+Call `damira_search_vendor_docs` for the collection and module you plan to use, e.g.
+`"ansible cisco.ios ios_ntp_global parameters"` with the vendor set. Module names and
+parameters change between collection versions; this lookup is what keeps the playbook
+from using a parameter that no longer exists. **If the lookup fails, say so** rather than
+emitting parameters you could not verify.
 
-Use the correct collections:
-- Cisco IOS/IOS-XE: `cisco.ios`
-- Cisco NX-OS: `cisco.nxos`
-- Arista EOS: `arista.eos`
-- Juniper Junos: `junipernetworks.junos`
-- Palo Alto: `paloaltonetworks.panos`
-- Fortinet: `fortinet.fortios`
+Read `references/ansible-collections.md` (beside this file) for the collection per platform,
+resource modules vs `*_config`, connection plugins, and check-mode caveats.
 
-### Step 3: Generate Playbook
+If the change is a standard baseline (NTP, AAA/TACACS+, SNMPv3, syslog) on IOS,
+NX-OS, EOS or Junos, the plugin ships golden templates. Render the device lines with
+`--secrets ansible`, so secret values (TACACS key, SNMP passphrases) come out as
+`{{ lookup('env', 'NAME') }}` and are resolved when the playbook runs — never render real
+secrets into your context or into a playbook:
+`python3 "<plugin root>/scripts/damira.py" render <task> --platform <p> --vars vars.yml --secrets ansible`
+and push them with the platform's `*_config` module (Junos: `juniper.device.junos_config`
+with the `set` lines under `lines:` — it takes set/delete lines directly and has no `format`
+option; drop the `#` comment lines, which it rejects), instead of hand-writing the lines. Banners are the exception: use the
+banner modules (`cisco.ios.ios_banner`, `cisco.nxos.nxos_banner`, `arista.eos.eos_banner`,
+`juniper.device.junos_banner`) with the text as a variable — a
+delimited `banner login ^ ... ^` block does not fit `*_config` `lines:`.
 
-Write a complete playbook including:
-- **Inventory file** — example hosts file with device groups
-- **Group vars** — platform-specific connection settings (`ansible_network_os`, `ansible_connection`)
-- **Playbook** — tasks with proper module usage, handlers, tags
-- **Error handling** — `rescue` blocks for critical operations
-- **Idempotency** — playbook should be safe to run multiple times
+## Step 3: Write the playbook
 
-### Step 4: Save to Workspace
+- **Inventory** — YAML, device groups, `ansible_network_os` + `ansible_connection` per group
+- **Credentials** — Ansible Vault or env lookups (`lookup('env', 'NET_PASSWORD')`), never inline
+- **Tasks** — resource modules (`state: merged`) where one exists; `*_config` only for lines
+  with no resource module. `gather_facts: false`. Fully-qualified module names.
+- **Error handling** — `block`/`rescue` around anything that changes device state
+- **Idempotency** — safe to run repeatedly. Resource modules are; `*_config` `lines:` only
+  when they match the running config exactly. Golden AAA/SNMPv3 lines carrying secrets
+  never do (IOS shows `key 7`, hides `snmp-server user`), so they report `changed` every run.
+  Say so in the hand-back, or split them into a task with `when:` on a first-run/rotation flag
 
-Save files:
-- Playbook: `playbooks/{task-name}.yml`
-- Inventory: `playbooks/inventory/{group-name}.yml` (if not existing)
-- Group vars: `playbooks/group_vars/{group}.yml` (if needed)
+Save under `playbooks/`: `playbooks/{task}.yml`, `playbooks/inventory/{group}.yml`,
+`playbooks/group_vars/{group}.yml`.
 
-### Step 5: Provide Run Instructions
+## Validate loop
 
-Show the user how to run it:
+**Delegate this loop to the `damira:damira-fixer` agent** (it runs on Haiku). Give it the path, `--skill generate-playbook`, and `<plugin root>`. It runs the command below, fixes only what the findings name, and stops after 3 rounds. Read its report: a change to a device command, module or resource is your call, not its. If the agent isn't available, run the loop yourself as below.
+
+The validator ships in this plugin, two levels above this skill's base directory:
+`<plugin root>/scripts/damira.py`. It runs locally (yamllint, `ansible-playbook
+--syntax-check`, `ansible-lint --profile production`) and makes no API call. `--skill` tags
+the local workflow event with this skill.
+
 ```bash
-ansible-playbook -i playbooks/inventory/hosts.yml playbooks/{task-name}.yml --check
-# Review output, then run for real:
-ansible-playbook -i playbooks/inventory/hosts.yml playbooks/{task-name}.yml
+python3 "<plugin root>/scripts/damira.py" validate playbooks/ --skill generate-playbook --host claude-code
 ```
 
-Include `--check` (dry run) before the actual run.
+1. Run it on everything you wrote.
+2. Fix every FAIL and re-run — at most 3 rounds.
+3. Still failing after 3 rounds: stop, tell the user which checks fail and why. Do not hand
+   it back as finished.
+4. A `skipped` check means the tool is not installed — pass the install hint on; it is not
+   a pass. An `UNVERIFIED` result is not a pass either.
+5. `couldn't resolve module/action '<ns>.<coll>.<module>'` or
+   `syntax-check[unknown-module]` means the collection is not installed, not that the module
+   is wrong. Do not rename or swap modules to make it go away: treat it like a skipped check,
+   tell the user to run `ansible-galaxy collection install <ns>.<coll>` (or `-r
+   collections/requirements.yml`) and re-validate, and don't count it against the 3 rounds.
+
+## Step 4: Hand back
+
+Lead with the dry run, then a single-device first run:
+
+```bash
+ansible-playbook -i playbooks/inventory/{group}.yml playbooks/{task}.yml --check --diff
+# review the diff, then one device first:
+ansible-playbook -i playbooks/inventory/{group}.yml playbooks/{task}.yml --limit <one-host>
+```
+
+State what validate reported (pass / warnings / skipped tools) and any assumption you made.

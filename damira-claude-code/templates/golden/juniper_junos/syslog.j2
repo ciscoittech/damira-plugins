@@ -1,0 +1,9 @@
+# Damira golden template: syslog (juniper_junos) — load with `load set terminal`
+{% set level = {'emergencies': 'emergency', 'alerts': 'alert', 'critical': 'critical', 'errors': 'error',
+                'warnings': 'warning', 'notifications': 'notice', 'informational': 'info',
+                'debugging': 'any'}[severity] %}
+set system syslog time-format millisecond
+set system syslog file messages any {{ level }}
+{% for server in servers %}
+set system syslog host {{ server }} any {{ level }}
+{% endfor %}

@@ -6,6 +6,9 @@
     ],
     "beforeShellExecution": [
       { "command": "python3 \"$CURSOR_PLUGIN_ROOT/hooks-handlers/device_gate.py\"", "failClosed": true }
+    ],
+    "postToolUse": [
+      { "command": "python3 \"$CURSOR_PLUGIN_ROOT/hooks-handlers/post_write_validate.py\" --host cursor", "matcher": "Write|Edit|MultiEdit|StrReplace", "timeout": 90 }
     ]
   }
 }

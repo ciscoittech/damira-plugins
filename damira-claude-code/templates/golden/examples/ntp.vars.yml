@@ -1,0 +1,8 @@
+# Example vars for `damira render ntp`. The first server is preferred.
+servers:
+  - 192.0.2.10
+  - 192.0.2.11
+# Optional, platform-specific:
+# source_interface: Loopback0     # IOS/NX-OS/EOS (NX-OS: mgmt0, EOS: Management1)
+# source_address: 198.51.100.1    # Junos
+# vrf: management                 # IOS/NX-OS/EOS

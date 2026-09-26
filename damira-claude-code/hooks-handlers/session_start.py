@@ -30,6 +30,27 @@ def _has_fallback_key() -> bool:
         return False
 
 
+def _ecosystem_note() -> str:
+    """Connected ITSM/chat/paging/... servers (#480). Names only; best-effort, never raises."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+        import ecosystem
+
+        project = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
+        servers = ecosystem.load_mcp_servers([Path(project) / ".mcp.json"])
+        servers += ecosystem.load_mcp_servers([Path.home() / ".claude.json"], project=project)
+        detected = ecosystem.describe(ecosystem.classify(servers))
+    except Exception:  # noqa: BLE001
+        detected = ""
+    lead = f"Ecosystem connectors configured here: {detected}. " if detected else ""
+    return (
+        lead + "claude.ai connectors can appear under UUID tool names, so find the engineer's "
+        "~~itsm, ~~tracker, ~~chat and other ecosystem tools with tool search; the Ecosystem "
+        "section of CLAUDE.md is the fallback. Damira drafts records; write them with the "
+        "engineer's connector only after they confirm."
+    )
+
+
 def main() -> None:
     key = os.environ.get("CLAUDE_PLUGIN_OPTION_API_KEY", "").strip() or _has_fallback_key()
     mode = os.environ.get("CLAUDE_PLUGIN_OPTION_EXECUTION_MODE", "advisor").strip().lower()
@@ -57,8 +78,11 @@ def main() -> None:
             "terminal to reach them — this is enforced and the attempt will be blocked."
         )
 
+    notes.append(_ecosystem_note())
+
     if notes:
-        print(json.dumps({"additionalContext": " ".join(notes)}))
+        print(json.dumps({"hookSpecificOutput": {"hookEventName": "SessionStart",
+                                                 "additionalContext": " ".join(notes)}}))
 
     sys.exit(0)
 

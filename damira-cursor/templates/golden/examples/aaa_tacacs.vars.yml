@@ -1,0 +1,14 @@
+# Example vars for `damira render aaa_tacacs`. The key is read from $TACACS_KEY at render
+# time — never put the literal in this file. env: names must start with NET_, TACACS_,
+# RADIUS_, SNMP_, NTP_, SYSLOG_ or GOLDEN_.
+group: TACACS-GROUP
+key: env:TACACS_KEY
+servers:
+  - name: ISE-1
+    address: 192.0.2.20
+  - name: ISE-2
+    address: 192.0.2.21
+# Optional:
+# source_interface: Loopback0     # IOS/NX-OS/EOS
+# vrf: management                 # IOS/NX-OS/EOS
+# remote_class: read-only         # Junos class for the 'remote' template user

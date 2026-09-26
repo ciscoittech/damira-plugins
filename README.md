@@ -53,6 +53,15 @@ Three more things engineers rightfully ask about:
   is told not to use it as source material. No confident documents built on failures.
 - **No hidden toolchain.** No PyPI, no pip, no uvx. Standard-library Python scripts only.
 
+## What's new in 0.3.0
+
+- **Validated automation.** The playbook, automation, Terraform, test and pipeline generators run `damira validate` on what they write and fix it (up to 3 rounds) before handing it back.
+- **Word and Excel deliverables.** MOPs and change controls export to `.docx`, and procedure workbooks to `.xlsx`, each with an HTML preview. Nothing to install: the scripts use python-docx or openpyxl if present, otherwise `uv run --with`.
+- **Topology diagrams.** `damira diagram build` reads `configs/` plus CDP/LLDP output; `damira diagram render` draws it. `--redact` writes a copy with hostnames and addresses replaced, for sharing.
+- **Cheaper runs.** Mechanical steps (rendering, fixing validation findings) are handed to small agents that run on a cheap model, so premium models are kept for diagnosis.
+- **Golden configs.** `damira render` produces NTP, AAA/TACACS+, SNMPv3, syslog and banner baselines for IOS, NX-OS, EOS and Junos.
+- **Opt-in usage stats.** `damira stats` shows your local workflow history. Uploading anonymised counts to Damira is off unless you set `DAMIRA_TELEMETRY=1`; no config text, file names or hostnames are ever sent.
+
 ## What's in the box
 
 | Skill | What it does |
@@ -63,6 +72,12 @@ Three more things engineers rightfully ask about:
 | `generate-config` | Device configuration for Cisco, Juniper, Arista, Palo Alto, and Fortinet |
 | `generate-playbook` | Ansible playbooks for network automation |
 | `generate-lab` | ContainerLab topologies to rehearse a change before the maintenance window |
+| `generate-automation` | Python automation (Nornir, Netmiko or Scrapli) with a YAML inventory, checked locally before it's handed back |
+| `generate-terraform` | Terraform for NetBox, PAN-OS, FortiOS, Meraki, IOS-XE and NX-OS, validated locally and ending with `terraform plan` |
+| `generate-tests` | pyATS/Genie before-and-after checks that prove a change did what it should, plus pytest tests for your scripts |
+| `generate-pipeline` | GitHub Actions or GitLab CI for network changes: lint, check mode or plan, a manual approval gate, then deploy |
+| `generate-workbook` | Excel workbooks (.xlsx) for migrations, audits and change control, with every command checked against the saved evidence |
+| `generate-diagram` | Topology diagrams from your configs and CDP/LLDP output: SVG, HTML preview, Mermaid and D2, optional PowerPoint slide |
 
 **How the division of labor works:** Damira supplies the domain data — vendor docs, CVE
 lookups, version-specific caveats, structured diagnoses. Your AI assembles that into the

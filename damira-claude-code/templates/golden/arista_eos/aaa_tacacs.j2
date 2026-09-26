@@ -1,0 +1,21 @@
+! Damira golden template: aaa_tacacs (arista_eos)
+! Keep a local user (username X privilege 15 role network-admin secret ...) as the fallback.
+! The automation account needs a TACACS+ command set on the server BEFORE this is pushed:
+! command authorization is last because it applies to the pushing session at once.
+{% for s in servers %}
+tacacs-server host {{ s.address }}{% if vrf is defined %} vrf {{ vrf }}{% endif %} key 0 {{ key }}
+{% endfor %}
+{% if source_interface is defined %}
+ip tacacs{% if vrf is defined %} vrf {{ vrf }}{% endif %} source-interface {{ source_interface }}
+{% endif %}
+aaa group server tacacs+ {{ group }}
+{% for s in servers %}
+   server {{ s.address }}{% if vrf is defined %} vrf {{ vrf }}{% endif %}
+
+{% endfor %}
+!
+aaa authentication login default group {{ group }} local
+aaa authorization exec default group {{ group }} local
+aaa accounting exec default start-stop group {{ group }}
+aaa accounting commands all default start-stop group {{ group }}
+aaa authorization commands all default group {{ group }} local

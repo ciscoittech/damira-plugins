@@ -57,7 +57,7 @@ If unsure of syntax for a specific platform version:
 - Configs: `labs/configs/{node-name}.cfg`
 - README: `labs/{lab-name}-README.md`
 
-## Step 5: Deploy instructions
+## Step 5: Hand back the deploy instructions
 
 ```bash
 cd labs/

@@ -1,0 +1,10 @@
+! Damira golden template: syslog (cisco_ios)
+service timestamps log datetime msec localtime show-timezone
+logging buffered {{ buffer_size }} {{ severity }}
+logging trap {{ severity }}
+{% if source_interface is defined %}
+logging source-interface {{ source_interface }}
+{% endif %}
+{% for server in servers %}
+logging host {{ server }}
+{% endfor %}

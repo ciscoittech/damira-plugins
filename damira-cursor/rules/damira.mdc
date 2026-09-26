@@ -92,4 +92,36 @@ Save deliverables into the workspace so the engineer keeps them:
 | Documents (MOP, change control, runbook, incident report) | `documents/` |
 | Device configs | `configs/` |
 | Ansible playbooks | `playbooks/` |
+| Python automation (Nornir/Netmiko/Scrapli) | `automation/` |
+| Terraform | `terraform/<name>/` |
+| pyATS / pytest tests | `tests/` |
+| CI pipelines | `.github/workflows/` or `.gitlab-ci.yml` |
 | Lab topologies | `labs/` |
+| Workbooks (.xlsx + preview) | `documents/<id>/`, with evidence in `documents/<id>/evidence/` |
+
+## Grounding documents in evidence
+
+Cursor has no document gate, so this rule is the check. Before writing a MOP, change
+control, or workbook to `documents/`, at least one Damira lookup in this session must
+have succeeded (exit 0). The document template alone is not evidence.
+
+For workbooks, save each successful lookup to `documents/<id>/evidence/` and render with
+`~/.damira/bin/damira workbook documents/<id>/workbook.json`. The renderer tags UNVERIFIED
+every command cell whose words and values don't all appear in the saved evidence. It is
+a text match, not proof the command is right, so say that when you report the result. Report those rows to the
+user. Never reword a command to make it match. See the generate-workbook skill.
+
+## Model choice
+
+Keep diagnosis and design on the premium model. Hand the mechanical steps to the
+plugin's subagents, which pin a cheap model (`composer-2`). If a subagent isn't
+available, switch the chat to Auto or a cheap model for those steps yourself: they run a
+script and react to its output, so they don't need a premium model.
+
+| Work | Model |
+|---|---|
+| Diagnosis (troubleshoot), upgrade risk assessment, config design, choosing modules/resources | Premium (the session model) |
+| Evidence lookups and deciding what a workbook or MOP must contain | Premium (the session model) |
+| Filling `workbook.json` from saved evidence and rendering it | Cheap: `damira-renderer` |
+| `damira validate` then fix the findings (max 3 rounds) | Cheap: `damira-fixer` |
+| Config audit, init, lab topology | Either; the scripts do the checking |

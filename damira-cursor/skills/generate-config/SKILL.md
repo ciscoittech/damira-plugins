@@ -44,7 +44,23 @@ labelling it. The engineer is going to paste this into a device.
 
 `configs/{hostname}.cfg` — e.g. `configs/chi-rtr-01.cfg`, `configs/fw-dmz-01.conf`
 
-## Step 5: Summarise
+## Step 5: Validate
+
+**Delegate this loop to the `damira-fixer` subagent** (pinned to a cheap model). Give it the path and `--skill generate-config`. It runs the command below, fixes only what the findings name, and stops after 3 rounds. Read its report: a change to a device command, module or resource is your call, not its. If the subagent isn't available, run the loop yourself as below.
+
+After writing the files, run:
+
+```bash
+~/.damira/bin/damira validate configs/{hostname}.cfg
+```
+
+It lints and syntax-checks locally (no API call) and exits non-zero on any failure. Fix every
+FAIL and re-run until it passes, at most 3 rounds; if it still fails, tell the user what is
+left. A `skipped` check means the tool isn't installed — pass the install hint on, don't
+treat it as a pass. (Saving under `configs/`, `automation/` or `playbooks/` also runs it
+automatically.)
+
+## Step 6: Summarise
 
 - what was configured
 - **every assumption you made** — call these out explicitly, they are where deployments break

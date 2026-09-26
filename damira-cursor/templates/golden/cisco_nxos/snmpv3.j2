@@ -1,0 +1,10 @@
+! Damira golden template: snmpv3 (cisco_nxos)
+snmp-server user {{ user }} {{ role | default('network-operator') }} auth sha {{ auth_pass }} priv aes-128 {{ priv_pass }}
+{% for host in hosts %}
+snmp-server host {{ host }} traps version 3 priv {{ user }}
+{% if vrf is defined %}
+snmp-server host {{ host }} use-vrf {{ vrf }}
+{% endif %}
+{% endfor %}
+snmp-server location {{ location }}
+snmp-server contact {{ contact }}

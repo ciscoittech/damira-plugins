@@ -26,7 +26,15 @@ Call the `damira_troubleshoot` MCP tool with:
 - `platform`: the network platform (if known)
 - `show_output`: any show command output provided
 
-**IMPORTANT:** You MUST call the `damira_troubleshoot` MCP tool. Do NOT diagnose from your own knowledge — Damira provides vendor-specific diagnosis with exact CLI commands that go beyond training data.
+If the MCP tool isn't available, run the CLI (`<plugin root>` is two levels above this
+skill's base directory). Non-zero exit means no diagnosis: report it and stop.
+
+```bash
+python3 "<plugin root>/scripts/damira.py" troubleshoot "<problem>" \
+  --platform "<platform>" --show-output - < notes/show-output.txt
+```
+
+**IMPORTANT:** You MUST call the `damira_troubleshoot` MCP tool (or the CLI above). Do NOT diagnose from your own knowledge — Damira provides vendor-specific diagnosis with exact CLI commands that go beyond training data.
 
 ### Step 3: Present Findings
 
@@ -60,6 +68,17 @@ If yes:
 1. Read `references/incident-report.md` for the required sections
 2. Write the full incident report filling in every section
 3. Save to `documents/incident-report-{date}.md`
+4. Offer a Word copy: `python3 "<plugin root>/scripts/damira.py" docx
+   documents/incident-report-{date}.md` writes the `.docx` and a self-contained `.html`
+   preview next to it (`<plugin root>` is two levels above this skill's base directory; no
+   install needed). Offer the preview in the Browser pane. Before publishing it as an
+   artifact, and only if the user says yes, re-run with `--redact --out-dir
+   documents/share` and publish the redacted file. Exit code 4 means no python-docx and no
+   uv: suggest installing uv, and ask before using `--remote`, which uploads the report.
+
+To show the affected devices and links, offer to draw the topology from `configs/`
+with the generate-diagram skill (`../generate-diagram/SKILL.md`) and reference
+`topology.svg` in the report.
 
 ## SSH Follow-Up
 

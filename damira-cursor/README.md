@@ -1,20 +1,30 @@
 # Damira — Cursor plugin
 
 CCIE-level network operations inside Cursor: troubleshooting, upgrade planning, config
-audit, device configuration, Ansible playbooks, and ContainerLab topologies.
+audit, device configuration, validated automation (Ansible, Python, Terraform, pyATS,
+CI pipelines), Word and Excel deliverables, topology diagrams, and ContainerLab topologies.
 
 **No PyPI package. No uvx. No pip. No Python toolchain.** Two ways to use it, both
 dependency-free:
 
 | Path | What you get | Setup |
 |---|---|---|
-| **Skills** (default) | 6 skills invoking bundled scripts | load the plugin |
+| **Skills** (default) | 13 skills invoking bundled scripts | load the plugin |
 | **MCP** (optional) | the same 7 tools as MCP, for Cursor / Claude Code / Claude Desktop / Windsurf | `damira install-mcp` |
 
 The MCP server is hand-rolled over stdio in the standard library, so adding it costs no
 dependencies. `damira-mcp` on PyPI is **not** required and is not used.
 
 Issues: [github.com/ciscoittech/damira-plugins/issues](https://github.com/ciscoittech/damira-plugins/issues).
+
+## What's new in 0.3.0
+
+- **Validated automation.** The playbook, automation, Terraform, test and pipeline generators run `damira validate` on what they write and fix it (up to 3 rounds) before handing it back.
+- **Word and Excel deliverables.** MOPs and change controls export to `.docx`, and procedure workbooks to `.xlsx`, each with an HTML preview. Nothing to install: the scripts use python-docx or openpyxl if present, otherwise `uv run --with`.
+- **Topology diagrams.** `damira diagram build` reads `configs/` plus CDP/LLDP output; `damira diagram render` draws it. `--redact` writes a copy with hostnames and addresses replaced, for sharing.
+- **Cheaper runs.** Mechanical steps (rendering, fixing validation findings) are handed to small agents that run on a cheap model, so premium models are kept for diagnosis.
+- **Golden configs.** `damira render` produces NTP, AAA/TACACS+, SNMPv3, syslog and banner baselines for IOS, NX-OS, EOS and Junos.
+- **Opt-in usage stats.** `damira stats` shows your local workflow history. Uploading anonymised counts to Damira is off unless you set `DAMIRA_TELEMETRY=1`; no config text, file names or hostnames are ever sent.
 
 ## Install
 
@@ -135,7 +145,8 @@ is **not** visible to the agent's shell, so a skill cannot reference it.
 | `rules/damira.mdc` | Always-on: division of labour, when to call, error contract, advisor posture |
 | `hooks-handlers/device_gate.py` | `beforeShellExecution` — asks before SSH/telnet in advisor mode (`strict` blocks), fail-closed |
 | `hooks-handlers/session_start.py` | Installs shims, warns on missing key, exports execution mode |
-| `skills/` (6) | troubleshoot, upgrade-plan, config-audit, generate-config, generate-playbook, generate-lab |
+| `skills/` (13) | troubleshoot, upgrade-plan, config-audit, generate-config, generate-lab, damira-init, and the generators generate-playbook, generate-automation, generate-terraform, generate-tests, generate-pipeline, generate-workbook, generate-diagram |
+| `agents/` | damira-renderer and damira-fixer: small agents for the mechanical steps, so they can run on a cheap model |
 
 ## The error contract
 

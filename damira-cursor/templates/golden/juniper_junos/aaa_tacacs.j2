@@ -1,0 +1,13 @@
+# Damira golden template: aaa_tacacs (juniper_junos) — load with `load set terminal`
+# 'password' stays in authentication-order so local accounts work if TACACS+ is down.
+# TACACS+ users with no local account map to the 'remote' template user, whose class
+# defaults to read-only here: set remote_class (or a Juniper-Local-User-Name on the
+# server) for the automation account BEFORE pushing, or it loses config rights.
+{% for s in servers %}
+set system tacplus-server {{ s.address }} secret "{{ key }}"
+set system tacplus-server {{ s.address }} timeout 5
+{% endfor %}
+set system authentication-order [ tacplus password ]
+set system login user remote class {{ remote_class | default('read-only') }}
+set system accounting events [ login interactive-commands ]
+set system accounting destination tacplus

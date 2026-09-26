@@ -70,8 +70,18 @@ Once resolved, offer:
 If yes, read `references/incident-report.md` for the required sections, write the full
 report filling in every one, and save to `documents/incident-report-{date}.md`.
 
+Then offer a Word copy: `~/.damira/bin/damira docx documents/incident-report-{date}.md`
+writes the `.docx` and a self-contained `.html` preview next to it (no install needed).
+Open the preview in Cursor's browser. Before sharing it outside this machine, re-run with
+`--redact --out-dir documents/share`. Exit code 4 means no python-docx and no uv: suggest
+installing uv, and ask before using `--remote`, which uploads the report.
+
 For a reusable runbook covering this failure mode, `references/runbook.md` has that
 structure.
+
+To show the affected devices and links, offer to draw the topology from `configs/`
+with the generate-diagram skill (`../generate-diagram/SKILL.md`) and reference
+`topology.svg` in the report.
 
 ## Device access
 

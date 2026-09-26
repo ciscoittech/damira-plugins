@@ -47,7 +47,7 @@ DEMO_NOTICE = (
     "and that they can add their own key: https://damiraai.com/docs/install#api-key]"
 )
 TIMEOUT = 300
-VERSION = "0.2.6"
+VERSION = "0.3.0"
 
 # Exit codes. 1 stays the catch-all (auth, rate limit, network) so existing scripts that
 # just check "non-zero" keep working. 2 and 3 exist so an agent (or a human) can tell "no
@@ -226,10 +226,24 @@ def call(message: str, context: dict) -> str:
             if marker in response:
                 raise DamiraError(f"request refused by the service, this is not an answer — {response}")
 
+    response = _with_deliverables(payload, response)
+
     # The session hook's note alone didn't reach users (#452); put it in every answer.
     if is_demo:
         return f"{DEMO_NOTICE}\n\n{response}"
     return response
+
+
+def _with_deliverables(payload: dict, response: str) -> str:
+    """Save or inline the server's deliverables[] (#484). Isolated so a bug there can
+    never break a plain answer."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import deliverables  # noqa: E402 — lazy, sibling module
+
+        return deliverables.attach(payload, response)
+    except Exception:  # noqa: BLE001
+        return response
 
 
 # --- Tool implementations. Message templating ported verbatim from server.py. ---
@@ -466,6 +480,21 @@ def _init_environment(a) -> str:
     return "\n".join(lines) or "- Not set yet. Re-run `damira init` with your vendors and platforms."
 
 
+def _init_ecosystem(a) -> str:
+    """Ecosystem section (#480); lives in ecosystem.py so this file stays small."""
+    entries = getattr(a, "ecosystem", None) or []
+    change_type = getattr(a, "change_type", "") or ""
+    if not entries and not change_type:
+        return ""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import ecosystem  # noqa: E402 — imported lazily, only when init is given ecosystem answers
+
+    try:
+        return "\n\n" + ecosystem.render_block(entries, change_type)
+    except ValueError as exc:
+        raise DamiraError(str(exc)) from exc
+
+
 def _init_write_block(path: Path, block: str) -> str:
     """Insert or replace the managed block; never touch anything outside it."""
     if not path.exists():
@@ -502,7 +531,7 @@ def cmd_init(a) -> str:
                           encoding="utf-8")
         report.append("configs/.gitignore: created")
 
-    block = _INIT_BODY.format(begin=INIT_BEGIN, end=INIT_END, environment=_init_environment(a))
+    block = _INIT_BODY.format(begin=INIT_BEGIN, end=INIT_END, environment=_init_environment(a) + _init_ecosystem(a))
     for name in INIT_TARGETS[a.target]:
         report.append(f"{name}: {_init_write_block(root / name, block)}")
 
@@ -512,6 +541,71 @@ def cmd_init(a) -> str:
         report.append("README.md: created")
 
     return f"Damira workspace ready in {root}\n" + "\n".join(f"  {r}" for r in report)
+
+
+def cmd_validate(a) -> "None":
+    """Local, deterministic checks on generated automation (#471). Never calls the API.
+
+    Exits here rather than returning text: validate prints its own report, and a failed
+    check must surface as a non-zero exit so the agent treats it as unfinished work.
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import validate  # noqa: E402 — imported lazily, only for this subcommand
+
+    sys.exit(validate.main_with_args(a))
+
+
+def cmd_stats(a) -> "None":
+    """First-pass rate, retries-to-green, top failing rules and model cost from the local
+    workflow log (#475). Never calls the API."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import stats  # noqa: E402 — imported lazily, only for this subcommand
+
+    sys.exit(stats.main_with_args(a))
+
+
+def cmd_workbook(a) -> "None":
+    """Render a workbook spec to .xlsx + index.html (#484). Needs no pip install: the
+    renderer finds openpyxl locally or runs itself under `uv run --with openpyxl`."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import render_workbook  # noqa: E402 — imported lazily, only for this subcommand
+
+    sys.exit(render_workbook.main(a.args))
+
+
+def cmd_diagram(a) -> "None":
+    """Topology diagrams (#485): `diagram build` parses configs into topology.json, `diagram
+    render` draws it. Stdlib only; the optional pptx comes via `uv run --with python-pptx`."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    args = list(a.args)
+    action = args.pop(0) if args else ""
+    if action == "build":
+        import topology  # noqa: E402 — imported lazily, only for this subcommand
+        sys.exit(topology.main(args))
+    if action == "render":
+        import render_diagram  # noqa: E402 — imported lazily, only for this subcommand
+        sys.exit(render_diagram.main(args))
+    print("usage: damira diagram build <configs-dir> -o documents/<id>/topology.json\n"
+          "       damira diagram render documents/<id>/topology.json [--pptx] [--redact --out-dir DIR]",
+          file=sys.stderr)
+    sys.exit(2)
+
+
+def cmd_docx(a) -> "None":
+    """Convert a MOP / change control / incident report to .docx + .html (#485). Needs no
+    pip install: the converter finds python-docx locally or runs under `uv run --with`."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import md_to_docx  # noqa: E402 — imported lazily, only for this subcommand
+
+    sys.exit(md_to_docx.main(a.args))
+
+
+def cmd_render(a) -> "None":
+    """Golden config templates (#473), rendered locally in a jinja2 sandbox. Never calls the API."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import golden  # noqa: E402 — imported lazily, only for this subcommand
+
+    sys.exit(golden.main_with_args(a))
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -573,7 +667,61 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--change-mgmt", default="", help="e.g. ITIL with weekly CAB")
     s.add_argument("--ticketing", default="", help="e.g. ServiceNow")
     s.add_argument("--naming", default="", help="e.g. SITE-ROLE-NN (CHI-RTR-01)")
+    s.add_argument("--ecosystem", action="append", default=[], metavar="CATEGORY=CONNECTOR[:KEY]",
+                   help='repeatable, e.g. --ecosystem "itsm=ServiceNow:NetOps" (categories: itsm, '
+                        'tracker, chat, paging, observability, source-of-truth, docs)')
+    # Same list as ecosystem.CHANGE_TYPES; render_block rejects anything else.
+    s.add_argument("--change-type", default="", choices=["", "standard", "normal", "emergency"],
+                   help="default change type for change requests")
     s.set_defaults(func=cmd_init)
+
+    s = sub.add_parser("validate", help="Lint/syntax-check generated playbooks, Terraform, Python, "
+                       "Jinja and configs locally (exit 1 on any failure)")
+    # Mirrors validate.build_parser; declared here so a problem in validate.py can only
+    # break `damira validate`, never the API commands.
+    s.add_argument("path", help="file or directory to validate")
+    s.add_argument("--json", action="store_true", help="machine-readable output")
+    s.add_argument("--host", default=os.environ.get("DAMIRA_HOST", "cli"),
+                   choices=["cli", "claude-code", "cursor"], help=argparse.SUPPRESS)
+    s.add_argument("--skill", default="", help=argparse.SUPPRESS)
+    s.set_defaults(func=cmd_validate)
+
+    s = sub.add_parser("stats", help="First-pass rate, retries-to-green, failing rules and model cost "
+                       "from the local workflow log")
+    s.add_argument("--since", default="", help="7d, 24h, or YYYY-MM-DD")
+    s.add_argument("--json", action="store_true", help="machine-readable output")
+    s.set_defaults(func=cmd_stats)
+
+    s = sub.add_parser("workbook", add_help=False,
+                       help="Render documents/<id>/workbook.json to .xlsx + index.html, flagging "
+                            "commands the saved evidence doesn't back (run `damira workbook -h`)")
+    s.add_argument("args", nargs=argparse.REMAINDER)
+    s.set_defaults(func=cmd_workbook)
+
+    s = sub.add_parser("diagram", add_help=False,
+                       help="Draw the topology: `diagram build configs/ -o topology.json`, then "
+                            "`diagram render topology.json` (SVG, HTML, Mermaid, D2; --pptx optional)")
+    s.add_argument("args", nargs=argparse.REMAINDER)
+    s.set_defaults(func=cmd_diagram)
+
+    s = sub.add_parser("docx", add_help=False,
+                       help="Convert documents/<id>/mop.md (or change-control.md, incident-report.md) "
+                            "to .docx + a .html preview (run `damira docx -h`)")
+    s.add_argument("args", nargs=argparse.REMAINDER)
+    s.set_defaults(func=cmd_docx)
+
+    s = sub.add_parser("render", help="Render a golden config template (NTP, AAA/TACACS+, SNMPv3, "
+                       "syslog, banner) for IOS, NX-OS, EOS or Junos")
+    s.add_argument("task", nargs="?", help="ntp, aaa_tacacs, snmpv3, syslog, banner")
+    s.add_argument("--platform", help="cisco_ios, cisco_nxos, arista_eos, juniper_junos")
+    s.add_argument("--vars", help="YAML/JSON vars file; values written env:NAME come from the environment")
+    s.add_argument("-o", "--output", help="write here instead of stdout, e.g. configs/rtr1-ntp.cfg")
+    s.add_argument("--force", action="store_true", help="overwrite --output if it exists")
+    s.add_argument("--secrets", choices=["resolve", "mask", "ansible"],
+                   help="env: values — resolve (default with -o), mask (default on stdout), "
+                        "or ansible lookups")
+    s.add_argument("--list", action="store_true", help="list available templates")
+    s.set_defaults(func=cmd_render)
 
     return p
 

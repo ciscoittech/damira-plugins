@@ -1,0 +1,16 @@
+# Damira golden template: snmpv3 (juniper_junos) — load with `load set terminal`
+set snmp location "{{ location }}"
+set snmp contact "{{ contact }}"
+set snmp view ALL oid .1 include
+set snmp v3 usm local-engine user {{ user }} authentication-sha authentication-password "{{ auth_pass }}"
+set snmp v3 usm local-engine user {{ user }} privacy-aes128 privacy-password "{{ priv_pass }}"
+set snmp v3 vacm security-to-group security-model usm security-name {{ user }} group {{ group }}
+set snmp v3 vacm access group {{ group }} default-context-prefix security-model usm security-level privacy read-view ALL
+set snmp v3 vacm access group {{ group }} default-context-prefix security-model usm security-level privacy notify-view ALL
+set snmp v3 target-parameters {{ group }}-PARAMS parameters message-processing-model v3 security-model usm security-level privacy security-name {{ user }}
+set snmp v3 notify {{ group }}-NOTIFY type trap tag {{ group }}-TAG
+{% for host in hosts %}
+set snmp v3 target-address NMS-{{ loop.index }} address {{ host }}
+set snmp v3 target-address NMS-{{ loop.index }} tag-list {{ group }}-TAG
+set snmp v3 target-address NMS-{{ loop.index }} target-parameters {{ group }}-PARAMS
+{% endfor %}

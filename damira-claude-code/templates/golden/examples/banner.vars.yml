@@ -1,0 +1,5 @@
+# Example vars for `damira render banner`. render rejects '^', backslashes and a line reading
+# EOF — each can end the banner early on some platform.
+text: |-
+  Authorized access only.
+  All activity is monitored and logged.

@@ -1,0 +1,12 @@
+! Damira golden template: syslog (cisco_nxos)
+{% set level = {'emergencies': 0, 'alerts': 1, 'critical': 2, 'errors': 3, 'warnings': 4,
+                'notifications': 5, 'informational': 6, 'debugging': 7}[severity] %}
+logging timestamp milliseconds
+logging logfile messages {{ level }} size {{ buffer_size }}
+{% for server in servers %}
+logging server {{ server }} {{ level }}{% if vrf is defined %} use-vrf {{ vrf }}{% endif %}
+
+{% endfor %}
+{% if source_interface is defined %}
+logging source-interface {{ source_interface }}
+{% endif %}

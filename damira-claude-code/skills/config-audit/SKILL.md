@@ -25,7 +25,14 @@ Call the `analyze_config` MCP tool with:
 - `config_text`: the full configuration text
 - `check_type`: "all" (covers both security and best practices)
 
-**IMPORTANT:** You MUST call the `analyze_config` MCP tool. Do NOT just review the config visually — the tool catches specific patterns (type 7 passwords, SNMP communities, HTTP management, missing NTP) with severity ratings.
+If the MCP tool isn't available, run the same local check (`<plugin root>` is two levels
+above this skill's base directory; the config never leaves the machine):
+
+```bash
+python3 "<plugin root>/scripts/audit_config.py" configs/router.cfg --check-type all
+```
+
+**IMPORTANT:** You MUST call the `analyze_config` MCP tool (or the script above). Do NOT just review the config visually — the tool catches specific patterns (type 7 passwords, SNMP communities, HTTP management, missing NTP) with severity ratings.
 
 ### Step 3: Present Findings
 

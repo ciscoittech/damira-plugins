@@ -168,6 +168,8 @@ def dispatch(name: str, a: dict) -> str:
         sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
         import audit_config
 
+        if audit_config.detect_vendor(a["config_text"]) not in audit_config.VENDORS:
+            return audit_config.unsupported_message()
         findings = audit_config.audit(a["config_text"], a.get("check_type", "all"))
         if not findings:
             return "No issues found in configuration analysis."

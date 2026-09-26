@@ -1,0 +1,47 @@
+core2#show lldp neighbors detail
+------------------------------------------------
+Local Intf: Gi0/2
+Chassis id: 0011.2233.4411
+Port id: Gi1/0/50
+Port Description: uplink core2
+System Name: access1.corp.example.com
+
+System Description: 
+Cisco IOS Software, Catalyst L3 Switch Software (CAT3K_CAA-UNIVERSALK9-M), Version 16.12.4
+
+Time remaining: 101 seconds
+System Capabilities: B,R
+Enabled Capabilities: B
+Management Addresses:
+    IP: 10.10.99.11
+------------------------------------------------
+Local Intf: Gi0/3
+Chassis id: 0011.2233.4412
+Port id: Gi1/0/50
+Port Description: uplink core2
+System Name: access2.corp.example.com
+
+System Description: 
+Cisco IOS Software, Catalyst L3 Switch Software (CAT3K_CAA-UNIVERSALK9-M), Version 16.12.4
+
+System Capabilities: B,R
+Enabled Capabilities: B
+Management Addresses:
+    IP: 10.10.99.12
+------------------------------------------------
+Local Intf: Gi0/1
+Chassis id: 0011.2233.4402
+Port id: Gi0/1
+Port Description: to core1
+System Name: core1.corp.example.com
+
+System Description: 
+Cisco IOS Software [Cupertino], ISR Software (X86_64_LINUX_IOSD-UNIVERSALK9-M), Version 17.9.4a
+
+System Capabilities: B,R
+Enabled Capabilities: R
+Management Addresses:
+    IP: 10.0.0.1
+
+Total entries displayed: 3
+core2#

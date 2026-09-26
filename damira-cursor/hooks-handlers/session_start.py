@@ -107,9 +107,31 @@ def has_key() -> bool:
     return False
 
 
-def main() -> None:
+def ecosystem_note(hook_input: dict) -> str:
+    """Connected ITSM/chat/paging/... servers (#480). Names only; best-effort, never raises."""
     try:
-        sys.stdin.read()
+        sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
+        import ecosystem
+
+        roots = hook_input.get("workspace_roots") if isinstance(hook_input, dict) else None
+        paths = [Path.home() / ".cursor" / "mcp.json"]
+        paths += [Path(r) / ".cursor" / "mcp.json" for r in (roots or []) if isinstance(r, str)]
+        detected = ecosystem.describe(ecosystem.classify(ecosystem.load_mcp_servers(paths)))
+    except Exception:  # noqa: BLE001
+        return ""
+    if not detected:
+        return ""
+    return (
+        f"Ecosystem connectors configured in Cursor: {detected}. Refer to them by category; "
+        "Damira drafts records, write them with the engineer's connector only after they "
+        "confirm. The Ecosystem section of AGENTS.md lists the engineer's defaults."
+    )
+
+
+def main() -> None:
+    hook_input = {}
+    try:
+        hook_input = json.loads(sys.stdin.read() or "{}")
     except Exception:  # noqa: BLE001 — a stdin hiccup must not break session start
         pass
 
@@ -146,6 +168,10 @@ def main() -> None:
             "lab devices are permitted. Configuration changes, clear commands, and reloads "
             "are never permitted regardless of mode."
         )
+
+    eco = ecosystem_note(hook_input)
+    if eco:
+        notes.append(eco)
 
     print(json.dumps({
         "env": {"DAMIRA_EXECUTION_MODE": mode},

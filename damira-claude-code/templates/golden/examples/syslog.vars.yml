@@ -1,0 +1,8 @@
+# Example vars for `damira render syslog`. severity: emergencies..debugging (IOS names).
+servers:
+  - 192.0.2.40
+severity: informational
+buffer_size: 64000
+# Optional:
+# source_interface: Loopback0     # IOS/NX-OS/EOS
+# vrf: management                 # NX-OS/EOS

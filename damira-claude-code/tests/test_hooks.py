@@ -293,3 +293,60 @@ def test_hook_matcher_routes_plugin_named_device_tools_to_the_gate():
                 if "device_gate" in h["hooks"][0]["command"]]
     for tool in ("mcp__plugin_damira_damira__ssh_command", "mcp__damira__network_device_command"):
         assert any(re.fullmatch(m, tool) for m in matchers), tool
+
+
+# --- #372: evidence is judged on the result, in Claude Code's real transcript shape ---
+
+_TOOL = "mcp__plugin_damira_damira__damira_search_vendor_docs"
+
+
+def _call(tool_id: str, name: str = _TOOL) -> str:
+    return json.dumps({"type": "assistant", "message": {"role": "assistant", "content": [
+        {"type": "tool_use", "id": tool_id, "name": name, "input": {"query": "IOS-XE BGP graceful restart"}},
+    ]}})
+
+
+def _result(tool_id: str, text: str, is_error: bool = False) -> str:
+    return json.dumps({"type": "user", "message": {"role": "user", "content": [
+        {"type": "tool_result", "tool_use_id": tool_id, "is_error": is_error,
+         "content": [{"type": "text", "text": text}]},
+    ]}})
+
+
+def _gate(tmp_path, *lines):
+    code, out, _ = run_hook(DOCUMENT_GATE, {
+        "tool_name": "Write",
+        "tool_input": {"file_path": "documents/bgp-gr-mop.md"},
+        "transcript_path": _transcript(tmp_path, *lines),
+    })
+    assert code == ALLOW
+    return _decision(out)
+
+
+HOMEPAGES = (
+    "- [Google](https://www.google.com/xhtml/search) Search the world's information\n"
+    "- [Search - Microsoft Bing](https://www.bing.com/)\n"
+    "- [Yahoo Search](https://search.yahoo.com/)"
+)
+CISCO = (
+    "- [BGP Graceful Restart](https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_bgp/"
+    "configuration/xe-17/irg-xe-17-book/bgp-graceful-restart.html) Configure bgp graceful-restart..."
+)
+
+
+def test_372_tool_call_without_a_result_is_not_evidence(tmp_path):
+    """The old line heuristic matched the assistant's own tool_use line."""
+    assert _gate(tmp_path, _call("t1")) == "ask"
+
+
+def test_372_search_engine_homepages_are_not_evidence(tmp_path):
+    assert _gate(tmp_path, _call("t1"), _result("t1", HOMEPAGES)) == "ask"
+
+
+def test_372_error_and_no_authoritative_results_are_not_evidence(tmp_path):
+    assert _gate(tmp_path, _call("t1"), _result("t1", "Upstream timeout contacting search", is_error=True)) == "ask"
+    assert _gate(tmp_path, _call("t2"), _result("t2", "No authoritative source found for this query.")) == "ask"
+
+
+def test_372_real_vendor_results_are_evidence(tmp_path):
+    assert _gate(tmp_path, _call("t1"), _result("t1", HOMEPAGES), _call("t2"), _result("t2", CISCO)) is None

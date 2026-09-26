@@ -21,22 +21,41 @@ Retrieve real vendor data before forming any opinion. Anything you state before 
 is recollection, not Damira's data — and version-specific bugs and advisories are exactly
 what recollection gets wrong.
 
+Pick a change folder first, for example `documents/<product>-<current>-to-<target>/`,
+and save every result into its `evidence/` folder. The workbook's grounding check reads
+only that folder.
+
+```bash
+mkdir -p documents/<id>/evidence
+```
+
 **Known bugs, caveats, supported upgrade path:**
 ```bash
 ~/.damira/bin/damira search-release-notes \
-  "<product>" --version "<target version>"
+  "<product>" --version "<target version>" \
+  > documents/<id>/evidence/release-notes.md; echo "exit=$?"
 ```
 
 **Security advisories:**
 ```bash
 ~/.damira/bin/damira search-cve \
-  "<product> <target version>" --product "<product>"
+  "<product> <target version>" --product "<product>" \
+  > documents/<id>/evidence/cves.md; echo "exit=$?"
 ```
 
-**Both are required, and both must complete before Step 3.** An upgrade assessment
+**Install and rollback syntax** (for the workbook or MOP; release notes rarely carry it):
+```bash
+~/.damira/bin/damira search-vendor-docs \
+  "<product> <target version> install mode upgrade rollback" --vendor "<vendor>" \
+  > documents/<id>/evidence/vendor-docs-install.md; echo "exit=$?"
+```
+
+Read the files.
+
+**Release notes and CVEs are required, and both must complete before Step 3.** An upgrade assessment
 without release notes and CVEs is a guess.
 
-**If either exits non-zero, say so plainly and stop.** Do not substitute your own
+**If release notes or CVEs exit non-zero, delete that file, say so plainly, and stop.** (A failed vendor-docs lookup: delete the file, say so, and carry on; the installer and rollback commands will be marked UNVERIFIED.) Do not substitute your own
 knowledge for a failed lookup and do not proceed to Step 4. An assessment built on a
 failed lookup is worse than no assessment, because it reads as though it were verified.
 
@@ -62,6 +81,20 @@ If the searches returned little for an unusual platform or version pair, fill ga
 
 Label what it adds as unverified alongside the retrieved evidence.
 
+## Step 3b: Present the assessment and offer the deliverables
+
+Once the evidence is in, offer both:
+> "Want the upgrade workbook (.xlsx, with pre-checks, steps and post-checks) and the MOP?"
+
+For the workbook, follow the generate-workbook skill (`../generate-workbook/SKILL.md`)
+from its Step 4, using `../generate-workbook/references/workbook-upgrade.md` and this
+change folder. Hand the spec fill and render to the `damira-renderer` subagent (cheap model) as that skill describes; keep the evidence and the decisions here. Then present the result (preview, and a canvas if
+available). Then carry on with the MOP below. Both documents use the same evidence and
+the same UNVERIFIED marking.
+
+For a MOP or CAB that needs a network diagram, draw the topology from `configs/` with
+the generate-diagram skill (`../generate-diagram/SKILL.md`) in the same change folder.
+
 ## Step 4: Write the MOP
 
 **Do not write a MOP unless Step 2 actually returned vendor data.** The templates are
@@ -79,9 +112,17 @@ If yes:
 4. Rollback must have specific trigger criteria, not "if something goes wrong"
 5. Mark any section you could not ground in retrieved data as
    **UNVERIFIED — confirm with vendor documentation before executing**
-6. Save to `documents/{product}-upgrade-mop-{current}-to-{target}.md`
+6. Save to `documents/{product}-upgrade-mop-{current}-to-{target}.md`, or `mop.md` in the
+   change folder (`documents/<id>/`) if you made one
+7. Offer the Word copy for CAB submission (Step 6)
 
 ## Step 5: Change control (optional)
 
 If asked, read `references/change-control.md`, write the change control with RFC fields,
 risk matrix, and CAB checklist, and save to `documents/{product}-change-control.md`.
+Then offer the Word copy (Step 6).
+
+## Step 6: Word copy and preview
+
+Offer a Word copy (.docx) for the CAB. If the user says yes, follow
+`references/word-copy.md`.

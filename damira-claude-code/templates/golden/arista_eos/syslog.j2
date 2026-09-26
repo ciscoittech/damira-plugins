@@ -1,0 +1,10 @@
+! Damira golden template: syslog (arista_eos)
+logging format timestamp high-resolution
+logging buffered {{ buffer_size }} {{ severity }}
+logging trap {{ severity }}
+{% if source_interface is defined %}
+logging{% if vrf is defined %} vrf {{ vrf }}{% endif %} source-interface {{ source_interface }}
+{% endif %}
+{% for server in servers %}
+logging{% if vrf is defined %} vrf {{ vrf }}{% endif %} host {{ server }}
+{% endfor %}

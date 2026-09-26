@@ -1,0 +1,39 @@
+core1#show cdp neighbors detail
+-------------------------
+Device ID: access1.corp.example.com
+Entry address(es): 
+  IP address: 10.10.99.11
+Platform: cisco WS-C3850-48P,  Capabilities: Switch IGMP 
+Interface: GigabitEthernet0/2,  Port ID (outgoing port): GigabitEthernet1/0/49
+Holdtime : 150 sec
+
+Version :
+Cisco IOS Software, Catalyst L3 Switch Software (CAT3K_CAA-UNIVERSALK9-M), Version 16.12.4
+
+-------------------------
+Device ID: access2.corp.example.com
+Entry address(es): 
+  IP address: 10.10.99.12
+Platform: cisco WS-C3850-48P,  Capabilities: Switch IGMP 
+Interface: GigabitEthernet0/3,  Port ID (outgoing port): GigabitEthernet1/0/49
+Holdtime : 139 sec
+
+-------------------------
+Device ID: core2.corp.example.com
+Entry address(es): 
+  IP address: 10.0.0.2
+Platform: cisco ISR4451-X/K9,  Capabilities: Router Switch IGMP 
+Interface: GigabitEthernet0/1,  Port ID (outgoing port): GigabitEthernet0/1
+Holdtime : 160 sec
+
+-------------------------
+Device ID: ap-lobby-01
+Entry address(es): 
+  IP address: 10.10.20.50
+Platform: cisco AIR-AP2802I-B-K9,  Capabilities: Trans-Bridge Source-Route-Bridge IGMP 
+Interface: GigabitEthernet0/4,  Port ID (outgoing port): GigabitEthernet0
+Holdtime : 120 sec
+
+
+Total cdp entries displayed : 4
+core1#

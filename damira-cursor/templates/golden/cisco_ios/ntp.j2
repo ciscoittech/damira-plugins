@@ -1,0 +1,8 @@
+! Damira golden template: ntp (cisco_ios)
+{% for server in servers %}
+ntp server {% if vrf is defined %}vrf {{ vrf }} {% endif %}{{ server }}{% if loop.first %} prefer{% endif %}
+
+{% endfor %}
+{% if source_interface is defined %}
+ntp source {{ source_interface }}
+{% endif %}

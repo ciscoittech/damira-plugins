@@ -29,6 +29,18 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/hooks-handlers/post_write_validate.py",
+            "timeout": 90
+          }
+        ]
+      }
     ]
   }
 }

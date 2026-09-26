@@ -1,0 +1,28 @@
+! Damira golden template: aaa_tacacs (cisco_ios)
+! Keep a local user (username X privilege 15 secret ...) as the fallback before applying.
+! The automation account needs a TACACS+ command set on the server BEFORE this is pushed:
+! command authorization is last because it applies to the pushing session at once.
+aaa new-model
+{% for s in servers %}
+tacacs server {{ s.name }}
+ address ipv4 {{ s.address }}
+ key 0 {{ key }}
+ timeout 5
+!
+{% endfor %}
+aaa group server tacacs+ {{ group }}
+{% for s in servers %}
+ server name {{ s.name }}
+{% endfor %}
+{% if vrf is defined %}
+ ip vrf forwarding {{ vrf }}
+{% endif %}
+{% if source_interface is defined %}
+ ip tacacs source-interface {{ source_interface }}
+{% endif %}
+!
+aaa authentication login default group {{ group }} local
+aaa authorization exec default group {{ group }} local if-authenticated
+aaa accounting exec default start-stop group {{ group }}
+aaa accounting commands 15 default start-stop group {{ group }}
+aaa authorization commands 15 default group {{ group }} local if-authenticated

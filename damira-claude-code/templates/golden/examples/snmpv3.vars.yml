@@ -1,0 +1,13 @@
+# Example vars for `damira render snmpv3` (authPriv: SHA + AES-128). Passphrases come from
+# $SNMP_AUTH_PASS and $SNMP_PRIV_PASS at render time.
+group: NETOPS-RO
+user: netops-monitor
+auth_pass: env:SNMP_AUTH_PASS
+priv_pass: env:SNMP_PRIV_PASS
+hosts:
+  - 192.0.2.30
+location: DC1 Row 4
+contact: noc@example.net
+# Optional:
+# role: network-operator          # NX-OS role for the SNMP user
+# vrf: management                 # NX-OS (use-vrf) / EOS trap hosts; IOS/EOS also get `snmp-server enable traps`

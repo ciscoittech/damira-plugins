@@ -1,0 +1,9 @@
+! Damira golden template: snmpv3 (cisco_ios)
+snmp-server group {{ group }} v3 priv
+snmp-server user {{ user }} {{ group }} v3 auth sha {{ auth_pass }} priv aes 128 {{ priv_pass }}
+snmp-server enable traps
+{% for host in hosts %}
+snmp-server host {{ host }} version 3 priv {{ user }}
+{% endfor %}
+snmp-server location {{ location }}
+snmp-server contact {{ contact }}
