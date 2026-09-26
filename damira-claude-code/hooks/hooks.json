@@ -12,7 +12,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash|BashOutput|mcp__.*damira.*__(ssh_command|network_device_command)",
+        "matcher": "Bash|BashOutput|mcp__.*damira.*__(ssh_command|network_device_command)|mcp__.*([Aa][Nn][Ss][Ii][Bb][Ll][Ee]|[Aa][Aa][Pp]|[Aa][Ww][Xx]|[Pp][Yy][Aa][Tt][Ss]|[Gg][Ee][Nn][Ii][Ee]|[Tt][Ee][Rr][Rr][Aa][Ff][Oo][Rr][Mm]|[Oo][Pp][Ee][Nn][Tt][Oo][Ff][Uu]).*__.*",
         "hooks": [
           {
             "type": "command",

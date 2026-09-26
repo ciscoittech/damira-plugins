@@ -32,6 +32,10 @@ CATEGORIES = {
                       "solarwinds", "kentik", "zabbix", "librenms", "honeycomb"),
     "source-of-truth": ("netbox", "nautobot", "infoblox", "device42", "ipfabric", "ip-fabric",
                         "forward-networks", "suzieq"),
+    # Orchestration targets (#474): Damira hands validated changes to these, never hosts them.
+    "automation": ("ansible", "aap", "awx"),
+    "testing": ("pyats", "genie"),
+    "iac": ("terraform", "opentofu"),
     "docs": ("notion", "confluence", "sharepoint", "google-drive", "gdrive", "onedrive",
              "gitbook", "box"),
 }
@@ -44,6 +48,9 @@ SCOPE_LABEL = {
     "paging": "service",
     "observability": "scope",
     "source-of-truth": "site or tenant",
+    "automation": "organization or inventory",
+    "testing": "testbed",
+    "iac": "workspace",
     "docs": "space",
 }
 
@@ -251,6 +258,16 @@ def load_mcp_servers(paths, project: "str | None" = None) -> "list[dict]":
     return servers
 
 
+def load_workspace_servers(root, home=None) -> "list[dict]":
+    """Servers both hosts would load for this workspace: Claude Code's .mcp.json and
+    ~/.claude.json project entry, Cursor's .cursor/mcp.json and ~/.cursor/mcp.json."""
+    root = Path(root)
+    home = Path(home) if home else Path.home()
+    servers = load_mcp_servers([root / ".mcp.json", root / ".cursor" / "mcp.json",
+                                home / ".cursor" / "mcp.json"])
+    return servers + load_mcp_servers([home / ".claude.json"], project=str(root))
+
+
 def _normalize(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower())
 
@@ -328,3 +345,146 @@ def render_block(entries, change_type: str = "") -> str:
             raise ValueError(f"--change-type must be one of: {', '.join(CHANGE_TYPES)}")
         lines.append(f"- Default change type: {change_type}")
     return "\n".join(lines)
+
+
+# --- orchestration (#474) ---------------------------------------------------------------
+
+ORCHESTRATION = ("source-of-truth", "automation", "testing", "iac")
+
+HANDOFFS = {
+    "source-of-truth": "intended state (devices, interfaces, VLANs, prefixes) as the input "
+                       "to a change",
+    "automation": "launch the validated playbook as a job in check mode (job_type=check) for "
+                  "a diff; a run-mode launch needs the engineer's approval",
+    "testing": "pyATS/Genie pre/post snapshots and diffs, each device call approved by the "
+               "engineer; config push is blocked in advisor mode",
+    "iac": "provider and module docs lookups; plan locally, apply only from the engineer's "
+           "own pipeline (run/apply tools are blocked in advisor mode)",
+}
+
+
+def render_capabilities(found: "dict[str, list[str]]") -> str:
+    """The Automation capabilities section `damira init` writes; "" when nothing is found."""
+    cats = [c for c in ORCHESTRATION if found.get(c)]
+    if not cats:
+        return ""
+    lines = [
+        "## Automation capabilities",
+        "Detected in this workspace's MCP config (server names only). The",
+        "source-of-truth-change skill hands validated changes to them; refer to them by",
+        "placeholder and find their tools with tool search.",
+    ]
+    for c in cats:
+        names = ", ".join(_one_line(safe_name(n)) for n in found[c])
+        lines.append(f"- ~~{c}: {names}: {HANDOFFS[c]}")
+    return "\n".join(lines)
+
+
+# The gate (hooks-handlers/device_gate.py in both plugins) matches the server, then the
+# verb in the tool name. Tool names vary by server version, so unknown verbs on a matched
+# server ask rather than pass: fail toward the human.
+_GATED = ("iac", "testing", "automation")
+_READ = {"list", "get", "search", "describe", "read", "fetch", "find", "lookup", "retrieve",
+         "query", "status", "resolve", "docs", "help"}
+_LAUNCH = {"launch", "run", "relaunch", "execute", "exec", "start", "trigger"}
+_PUSH = {"configure", "apply", "push", "commit", "rollback", "reload", "deploy", "write",
+         "erase", "clear", "delete", "destroy"}
+_IAC_WRITE = _PUSH | _LAUNCH | {"create", "update", "action", "import", "cancel", "discard",
+                                "override", "lock", "unlock", "taint", "upload", "set", "queue"}
+
+_DENY = {
+    "testing": "Blocked: Damira is in advisor mode and does not push configuration through "
+               "pyATS. Hand the engineer the validated change and the command to apply it.",
+    "iac": "Blocked: Damira is in advisor mode and does not run or apply Terraform. Plan "
+           "locally and hand the engineer the plan; they apply it from their own pipeline.",
+}
+_ASK = {
+    "automation": "This launches an automation job that is not in check mode, so it can change "
+                  "devices. Damira hands off in check mode (job_type=check); approve only if "
+                  "you intend a live run.",
+    "automation-check": "This launches an automation job in check mode (job_type=check). AAP "
+                        "honours that only if the job template prompts for job type on launch "
+                        "(ask_job_type_on_launch); otherwise it runs the template's own type, "
+                        "which may be a live run. Approve once you have confirmed the prompt.",
+    "testing": "This pyATS call connects to a device. Damira is in advisor mode, so it's your "
+               "call: approve it if the device and command are what you expect.",
+    "iac": "Damira is in advisor mode and does not recognise this Terraform tool as a lookup. "
+           "Approve it only if it changes nothing.",
+}
+
+
+def _tokens(text: str) -> "list[str]":
+    text = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", text)
+    return [t for t in re.split(r"[^a-z0-9]+", text.lower()) if t]
+
+
+def _check_mode(tool_input, verbs: "set[str]") -> bool:
+    """True only for a job-template launch whose own job_type (top level) is check.
+
+    extra_vars/extra_data are playbook variables, so a job_type inside them changes
+    nothing; workflow job templates have no job type at all.
+    """
+    if "workflow" in verbs or not isinstance(tool_input, dict):
+        return False
+    return str(tool_input.get("job_type", "")).strip().lower() == "check"
+
+
+def gate_category(server: str, hint: str = "") -> "str | None":
+    """automation / testing / iac for an orchestration server, else None."""
+    if "damira" in server.lower():
+        return None
+    found = classify([{"name": server, "host": hint, "package": ""}])
+    return next((c for c in _GATED if c in found), None)
+
+
+def gate_mcp(tool_name: str, tool_input=None, hint: str = "", mode: str = "advisor",
+             strict: bool = False) -> "tuple[str, str] | None":
+    """("allow" | "ask" | "deny", reason) for an orchestration MCP call; None if unrelated.
+
+    `tool_name` is `mcp__<server>__<tool>` (Claude Code) or a bare tool name with the
+    server's URL host or command in `hint` (Cursor).
+    """
+    parts = tool_name.split("__")
+    if len(parts) >= 3 and parts[0] == "mcp":
+        server, tool = "__".join(parts[1:-1]), parts[-1]
+    else:
+        server, tool = "", tool_name
+    category = gate_category(server, hint)
+    if not category:
+        return None
+    if isinstance(tool_input, str):
+        try:
+            tool_input = json.loads(tool_input)
+        except ValueError:
+            tool_input = {}
+    noise = set(CATEGORIES[category]) | {"mcp", "server", "tool"}
+    tokens = [t for t in _tokens(tool) if t not in noise]
+    verbs, first = set(tokens), (tokens[0] if tokens else "")
+
+    decision = "ask"
+    if category == "automation":
+        if first in _READ:
+            decision = "allow"
+        elif verbs & _LAUNCH and _check_mode(tool_input, verbs):
+            # Still asks: the gate can't see whether the template prompts for job type.
+            return "ask", _ASK["automation-check"]
+    elif category == "testing":
+        if verbs & _PUSH:
+            decision = "deny"
+        elif first in _READ:
+            decision = "allow"
+    elif first in _READ:  # iac
+        decision = "allow"
+    elif verbs & _IAC_WRITE:
+        decision = "deny"
+
+    elevated = mode in ("guided", "lab")
+    if decision == "deny" and elevated:
+        decision = "ask"  # never auto-run a change, whatever the mode
+    elif decision == "ask" and strict and not elevated:
+        decision = "deny"
+    if decision == "allow":
+        return "allow", ""
+    if decision == "deny":
+        return "deny", _DENY.get(category, "Blocked: Damira is in advisor mode. " + _ASK[category])
+    return "ask", _ASK[category]

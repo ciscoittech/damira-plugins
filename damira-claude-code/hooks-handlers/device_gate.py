@@ -23,6 +23,12 @@ is instead handed to the user to approve, because that is their terminal and not
 every host is network gear — a blanket block broke ordinary server work as soon as
 the plugin was installed. Set device_gate to "strict" to block those too.
 
+It also gates the engineer's own orchestration MCP servers (#474): Ansible AAP, pyATS
+and Terraform. Every AAP job launch asks,
+because AAP ignores job_type=check unless the template prompts for it. A pyATS config push or a Terraform run/apply is denied in advisor mode. The rules
+live in scripts/ecosystem.py, shared with the Cursor plugin. The hooks.json matcher sees
+only the tool name, so the server name must carry the product (aap, pyats, terraform...).
+
 Shell matching is best-effort by nature; obfuscation can defeat it. It is a floor,
 not a proof.
 """
@@ -31,6 +37,7 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
 
 # Word-boundary matched so "sshd_config" or "netcat-notes.md" don't trip the gate,
 # while `ssh`, `ssh -J`, and `... | ssh host` all do.
@@ -109,12 +116,24 @@ def main() -> None:
             sys.exit(0)
         _deny(_DENY_REASON)
 
+    strict = os.environ.get("CLAUDE_PLUGIN_OPTION_DEVICE_GATE", "ask").strip().lower() == "strict"
+    if tool_name.startswith("mcp__"):
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+        import ecosystem
+
+        verdict = ecosystem.gate_mcp(tool_name, tool_input, mode=mode, strict=strict)
+        if verdict and verdict[0] == "deny":
+            _deny(verdict[1])
+        if verdict and verdict[0] == "ask":
+            _ask(verdict[1])
+        sys.exit(0)
+
     if tool_name in ("Bash", "BashOutput"):
         command = tool_input.get("command", "")
         if isinstance(command, str) and _DEVICE_CMD.search(command):
             if elevated:
                 sys.exit(0)
-            if os.environ.get("CLAUDE_PLUGIN_OPTION_DEVICE_GATE", "ask").strip().lower() == "strict":
+            if strict:
                 _deny(_DENY_REASON)
             _ask(_ASK_REASON)
 

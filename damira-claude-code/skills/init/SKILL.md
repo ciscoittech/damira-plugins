@@ -61,6 +61,10 @@ python3 "<plugin root>/scripts/damira.py" init --target claude \
 Pass one `--ecosystem "CATEGORY=CONNECTOR[:GROUP_OR_KEY]"` per category the
 user answered. Leave out any option the user didn't answer.
 
+Init also looks for NetBox/Nautobot, Ansible AAP, pyATS and Terraform MCP servers in
+`.mcp.json` and `~/.claude.json` and writes what it finds (server names only) as an
+**Automation capabilities** section. Add `--no-detect` if the user doesn't want that.
+
 ## Step 3: Report
 
 Show the script's output, then suggest two first prompts that fit their
@@ -70,3 +74,7 @@ configs carry secrets.
 
 If `configs/` holds device configs, one first prompt can be "draw the topology"
 (the generate-diagram skill), best with saved `show cdp neighbors detail` output.
+
+If the output lists Automation capabilities, one first prompt can be a source-of-truth
+change, e.g. "add VLAN 120 to the Chicago access switches from NetBox" (the
+source-of-truth-change skill).

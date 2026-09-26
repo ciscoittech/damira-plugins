@@ -23,6 +23,12 @@ is a positive determination that the call is safe.
 Mode is read from DAMIRA_EXECUTION_MODE, which mcp.json sets for the MCP server. Cursor
 has no userConfig equivalent, so the env var is the single source for the mode.
 
+beforeMCPExecution also gates the engineer's own orchestration MCP servers (#474): Ansible
+AAP, pyATS and Terraform, recognised from the server's URL host or command. Every AAP job launch asks,
+because AAP ignores job_type=check unless the template prompts for it. A pyATS config push or a
+Terraform run/apply is denied in advisor mode. The rules live in scripts/ecosystem.py,
+shared with the Claude Code plugin. Other MCP tools are allowed untouched.
+
 Shell matching is best-effort; obfuscation can defeat it. A floor, not a proof.
 """
 
@@ -30,6 +36,8 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
+from urllib.parse import urlparse
 
 _DEVICE_CMD = re.compile(
     r"(?:^|[\s;&|(`$])(?:ssh|telnet|nc|ncat|netcat|sshpass)(?:\s|$)"
@@ -58,14 +66,31 @@ _DENY_MSG = (
 )
 
 
-def _deny() -> None:
-    print(json.dumps({"permission": "deny", "agent_message": _DENY_MSG, "user_message": _DENY_MSG}))
+def _deny(msg: str = _DENY_MSG) -> None:
+    print(json.dumps({"permission": "deny", "agent_message": msg, "user_message": msg}))
     sys.exit(0)
 
 
 def _allow() -> None:
     print(json.dumps({"permission": "allow"}))
     sys.exit(0)
+
+
+def _orchestration(event: dict, elevated: bool) -> None:
+    """AAP / pyATS / Terraform MCP calls (#474). Returns only when the call is unrelated."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+    import ecosystem
+
+    url = event.get("url") or ""
+    hint = (urlparse(url).hostname or "") if isinstance(url, str) and url else ""
+    hint = hint or str(event.get("command") or "")
+    strict = os.environ.get("DAMIRA_DEVICE_GATE", "ask").strip().lower() == "strict"
+    verdict = ecosystem.gate_mcp(event.get("tool_name", ""), event.get("tool_input"), hint=hint,
+                                 mode="lab" if elevated else "advisor", strict=strict)
+    if verdict and verdict[0] in ("deny", "ask"):
+        print(json.dumps({"permission": verdict[0], "agent_message": verdict[1],
+                          "user_message": verdict[1]}))
+        sys.exit(0)
 
 
 def _ask() -> None:
@@ -90,6 +115,7 @@ def main() -> None:
     if tool_name:
         if tool_name in _BLOCKED_MCP_TOOLS and not elevated:
             _deny()
+        _orchestration(event, elevated)
         _allow()
 
     # beforeShellExecution — command at top level.

@@ -9,13 +9,18 @@ dependency-free:
 
 | Path | What you get | Setup |
 |---|---|---|
-| **Skills** (default) | 13 skills invoking bundled scripts | load the plugin |
+| **Skills** (default) | 14 skills invoking bundled scripts | load the plugin |
 | **MCP** (optional) | the same 7 tools as MCP, for Cursor / Claude Code / Claude Desktop / Windsurf | `damira install-mcp` |
 
 The MCP server is hand-rolled over stdio in the standard library, so adding it costs no
 dependencies. `damira-mcp` on PyPI is **not** required and is not used.
 
 Issues: [github.com/ciscoittech/damira-plugins/issues](https://github.com/ciscoittech/damira-plugins/issues).
+
+## What's new in 0.3.1
+
+- **Source-of-truth changes.** The new `source-of-truth-change` skill turns intended state in NetBox or Nautobot into a validated change, then hands it to the automation you already run: an Ansible Automation Platform job in check mode, a pyATS/Genie before-and-after diff, or a Terraform plan.
+- **The device gate covers your orchestration tools.** If you've connected AAP/AWX, pyATS or Terraform MCP servers, read-only calls go through, every AAP job launch asks first, and in advisor mode Terraform apply and pyATS config pushes are blocked (they ask instead in guided or lab mode). `strict` turns every ask into a block.
 
 ## What's new in 0.3.0
 
@@ -145,7 +150,7 @@ is **not** visible to the agent's shell, so a skill cannot reference it.
 | `rules/damira.mdc` | Always-on: division of labour, when to call, error contract, advisor posture |
 | `hooks-handlers/device_gate.py` | `beforeShellExecution` — asks before SSH/telnet in advisor mode (`strict` blocks), fail-closed |
 | `hooks-handlers/session_start.py` | Installs shims, warns on missing key, exports execution mode |
-| `skills/` (13) | troubleshoot, upgrade-plan, config-audit, generate-config, generate-lab, damira-init, and the generators generate-playbook, generate-automation, generate-terraform, generate-tests, generate-pipeline, generate-workbook, generate-diagram |
+| `skills/` (14) | troubleshoot, upgrade-plan, config-audit, generate-config, generate-lab, damira-init, and the generators generate-playbook, generate-automation, generate-terraform, generate-tests, generate-pipeline, generate-workbook, generate-diagram, source-of-truth-change |
 | `agents/` | damira-renderer and damira-fixer: small agents for the mechanical steps, so they can run on a cheap model |
 
 ## The error contract

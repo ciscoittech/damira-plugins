@@ -47,7 +47,7 @@ DEMO_NOTICE = (
     "and that they can add their own key: https://damiraai.com/docs/install#api-key]"
 )
 TIMEOUT = 300
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 
 # Exit codes. 1 stays the catch-all (auth, rate limit, network) so existing scripts that
 # just check "non-zero" keep working. 2 and 3 exist so an agent (or a human) can tell "no
@@ -495,6 +495,21 @@ def _init_ecosystem(a) -> str:
         raise DamiraError(str(exc)) from exc
 
 
+def _init_capabilities(a, root: Path) -> str:
+    """Automation capabilities (#474): orchestration MCP servers found in this workspace's
+    configs. Server names only; `--no-detect` skips it."""
+    if getattr(a, "no_detect", False):
+        return ""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import ecosystem  # noqa: E402
+
+    try:
+        block = ecosystem.render_capabilities(ecosystem.classify(ecosystem.load_workspace_servers(root)))
+    except Exception:  # noqa: BLE001 — detection is best-effort; init must still work
+        return ""
+    return "\n\n" + block if block else ""
+
+
 def _init_write_block(path: Path, block: str) -> str:
     """Insert or replace the managed block; never touch anything outside it."""
     if not path.exists():
@@ -531,7 +546,7 @@ def cmd_init(a) -> str:
                           encoding="utf-8")
         report.append("configs/.gitignore: created")
 
-    block = _INIT_BODY.format(begin=INIT_BEGIN, end=INIT_END, environment=_init_environment(a) + _init_ecosystem(a))
+    block = _INIT_BODY.format(begin=INIT_BEGIN, end=INIT_END, environment=_init_environment(a) + _init_ecosystem(a) + _init_capabilities(a, root))
     for name in INIT_TARGETS[a.target]:
         report.append(f"{name}: {_init_write_block(root / name, block)}")
 
@@ -669,10 +684,13 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--naming", default="", help="e.g. SITE-ROLE-NN (CHI-RTR-01)")
     s.add_argument("--ecosystem", action="append", default=[], metavar="CATEGORY=CONNECTOR[:KEY]",
                    help='repeatable, e.g. --ecosystem "itsm=ServiceNow:NetOps" (categories: itsm, '
-                        'tracker, chat, paging, observability, source-of-truth, docs)')
+                        'tracker, chat, paging, observability, source-of-truth, docs, '
+                        'automation, testing, iac)')
     # Same list as ecosystem.CHANGE_TYPES; render_block rejects anything else.
     s.add_argument("--change-type", default="", choices=["", "standard", "normal", "emergency"],
                    help="default change type for change requests")
+    s.add_argument("--no-detect", action="store_true",
+                   help="don't list the NetBox/AAP/pyATS/Terraform MCP servers found in this workspace")
     s.set_defaults(func=cmd_init)
 
     s = sub.add_parser("validate", help="Lint/syntax-check generated playbooks, Terraform, Python, "

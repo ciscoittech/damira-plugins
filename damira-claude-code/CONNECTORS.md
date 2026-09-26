@@ -27,6 +27,28 @@ connector write it. Nothing is written to a ticketing or chat system without tha
 | `~~observability` | Metrics, logs and alerts as troubleshooting evidence | Datadog, Splunk, Grafana, Prometheus, ThousandEyes |
 | `~~source-of-truth` | Devices, sites, IPs, CMDB CI lookups | NetBox, Nautobot, Infoblox, IP Fabric |
 | `~~docs` | Publishing MOPs, runbooks and incident reports | Confluence, Notion, SharePoint, Google Drive |
+| `~~automation` | Running a validated playbook as a check-mode job | Ansible Automation Platform, AWX |
+| `~~testing` | Pre/post state snapshots and their diff | pyATS / Genie |
+| `~~iac` | Provider and module documentation lookups | Terraform |
+
+## Orchestration servers (#474)
+
+`~~source-of-truth`, `~~automation`, `~~testing` and `~~iac` are the servers the
+`source-of-truth-change` skill hands work to. `damira init` lists the ones it finds as an
+**Automation capabilities** section (server names only; `--no-detect` skips it). The
+plugin's device gate enforces advisor mode on them:
+
+- `~~automation`: every job launch asks the engineer. A check-mode launch (top-level
+  `job_type=check`) asks with a reminder to confirm the template prompts for job type,
+  since AAP otherwise ignores the check request; any other launch, including a workflow
+  launch, is denied with `device_gate: strict`.
+- `~~testing`: a config push is denied; a call that reaches a device asks.
+- `~~iac`: runs, applies and workspace changes are denied; registry lookups pass.
+- A tool the gate doesn't recognise on these servers asks. Other MCP servers are untouched.
+
+In guided or lab mode a denied call asks instead. Claude Code's gate sees only the tool
+name, so keep the product (`aap`, `ansible`, `pyats`, `terraform`) in the server name;
+Cursor's gate also reads the server's URL host or command.
 
 Set the defaults once with `damira init`:
 

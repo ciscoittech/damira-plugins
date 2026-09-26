@@ -46,6 +46,10 @@ anything unanswered.
 
 One `--ecosystem "CATEGORY=CONNECTOR[:GROUP_OR_KEY]"` per category answered.
 
+Init also looks for NetBox/Nautobot, Ansible AAP, pyATS and Terraform MCP servers in
+`.cursor/mcp.json` and `~/.cursor/mcp.json` and writes what it finds (server names only)
+as an **Automation capabilities** section. Add `--no-detect` if the user doesn't want that.
+
 ## Step 3: Report
 
 Show the output, then suggest two first prompts that fit their answers.
@@ -53,3 +57,7 @@ Mention that `configs/` is git-ignored because device configs carry secrets.
 
 If `configs/` holds device configs, one first prompt can be "draw the topology"
 (the generate-diagram skill), best with saved `show cdp neighbors detail` output.
+
+If the output lists Automation capabilities, one first prompt can be a source-of-truth
+change, e.g. "add VLAN 120 to the Chicago access switches from NetBox" (the
+source-of-truth-change skill).

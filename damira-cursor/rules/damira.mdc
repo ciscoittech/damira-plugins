@@ -99,6 +99,14 @@ Save deliverables into the workspace so the engineer keeps them:
 | Lab topologies | `labs/` |
 | Workbooks (.xlsx + preview) | `documents/<id>/`, with evidence in `documents/<id>/evidence/` |
 
+## Changes from the source of truth
+
+When the engineer has NetBox/Nautobot, AAP, pyATS or Terraform MCP servers (the
+Automation capabilities section of AGENTS.md), use the source-of-truth-change skill: read
+intent, generate, `damira validate`, then hand off. Launch AAP jobs only in check mode
+(`job_type=check`), and never apply a change through pyATS or Terraform. The device gate
+asks the engineer before every AAP launch; a blocked call is the answer, not something to route around.
+
 ## Grounding documents in evidence
 
 Cursor has no document gate, so this rule is the check. Before writing a MOP, change

@@ -53,6 +53,11 @@ Three more things engineers rightfully ask about:
   is told not to use it as source material. No confident documents built on failures.
 - **No hidden toolchain.** No PyPI, no pip, no uvx. Standard-library Python scripts only.
 
+## What's new in 0.3.1
+
+- **Source-of-truth changes.** The new `source-of-truth-change` skill turns intended state in NetBox or Nautobot into a validated change, then hands it to the automation you already run: an Ansible Automation Platform job in check mode, a pyATS/Genie before-and-after diff, or a Terraform plan.
+- **The device gate covers your orchestration tools.** If you've connected AAP/AWX, pyATS or Terraform MCP servers, read-only calls go through, every AAP job launch asks first, and in advisor mode Terraform apply and pyATS config pushes are blocked (they ask instead in guided or lab mode). `strict` turns every ask into a block.
+
 ## What's new in 0.3.0
 
 - **Validated automation.** The playbook, automation, Terraform, test and pipeline generators run `damira validate` on what they write and fix it (up to 3 rounds) before handing it back.
@@ -78,6 +83,7 @@ Three more things engineers rightfully ask about:
 | `generate-pipeline` | GitHub Actions or GitLab CI for network changes: lint, check mode or plan, a manual approval gate, then deploy |
 | `generate-workbook` | Excel workbooks (.xlsx) for migrations, audits and change control, with every command checked against the saved evidence |
 | `generate-diagram` | Topology diagrams from your configs and CDP/LLDP output: SVG, HTML preview, Mermaid and D2, optional PowerPoint slide |
+| `source-of-truth-change` | NetBox/Nautobot intent to a validated change, handed to an AAP check-mode job, a pyATS diff or a Terraform plan |
 
 **How the division of labor works:** Damira supplies the domain data — vendor docs, CVE
 lookups, version-specific caveats, structured diagnoses. Your AI assembles that into the
