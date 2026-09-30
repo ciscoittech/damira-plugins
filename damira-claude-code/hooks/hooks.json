@@ -1,5 +1,15 @@
 {
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/hooks-handlers/prompt_hint.py"
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [

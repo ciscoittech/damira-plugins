@@ -47,7 +47,7 @@ DEMO_NOTICE = (
     "and that they can add their own key: https://damiraai.com/docs/install#api-key]"
 )
 TIMEOUT = 300
-VERSION = "0.3.2"
+VERSION = "0.3.3"
 
 # Exit codes. 1 stays the catch-all (auth, rate limit, network) so existing scripts that
 # just check "non-zero" keep working. 2 and 3 exist so an agent (or a human) can tell "no
@@ -760,7 +760,16 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
+# Subcommands that hand their whole argv to their own script. argparse's REMAINDER won't
+# take a leading option, so `damira lab -h` errored; route these before argparse sees them.
+_PASS_THROUGH = {"workbook": "cmd_workbook", "diagram": "cmd_diagram", "docx": "cmd_docx", "lab": "cmd_lab"}
+
+
 def main() -> None:
+    argv = sys.argv[1:]
+    if argv and argv[0] in _PASS_THROUGH:
+        globals()[_PASS_THROUGH[argv[0]]](argparse.Namespace(args=argv[1:]))
+        return
     args = build_parser().parse_args()
     try:
         print(args.func(args))

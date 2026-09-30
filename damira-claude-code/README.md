@@ -51,6 +51,11 @@ platforms and versions you run and how changes get approved, then creates
 `notes/`, and records your network in `CLAUDE.md` so every chat starts with that
 context. Re-running updates your answers without touching the rest of the file.
 
+## What's new in 0.3.3
+
+- **Damira skills trigger more reliably.** `config-audit` now fires on any config you paste, not only on files with a config extension, and the skill descriptions are sharper. A small local hook names the matching skill when your message looks like a device config, `show` output, a fault report, an upgrade or a config request. It runs no network call and never changes your prompt. Turn it off with `export DAMIRA_PROMPT_HINTS=0`.
+- **`damira lab|workbook|docx|diagram -h`** now show their own help.
+
 ## What's new in 0.3.2
 
 - **Test a change in a lab first.** The new `lab-test-change` skill deploys a throwaway ContainerLab lab, applies your playbook or script, runs show-command or pyATS/Genie checks, reports pass/fail and always destroys the lab. It needs Docker and containerlab on your machine; without them it validates the change only and says so.
@@ -69,6 +74,21 @@ context. Re-running updates your answers without touching the rest of the file.
 - **Cheaper runs.** Mechanical steps (rendering, fixing validation findings) are handed to small agents that run on a cheap model, so premium models are kept for diagnosis.
 - **Golden configs.** `damira render` produces NTP, AAA/TACACS+, SNMPv3, syslog and banner baselines for IOS, NX-OS, EOS and Junos.
 - **Opt-in usage stats.** `damira stats` shows your local workflow history. Uploading anonymised counts to Damira is off unless you set `DAMIRA_TELEMETRY=1`; no config text, file names or hostnames are ever sent.
+
+## Using Damira
+
+Claude decides on its own when a message matches a Damira skill. To make sure it uses one:
+
+- Run the skill directly: `/damira:troubleshoot`, `/damira:upgrade-plan`, `/damira:config-audit`, `/damira:generate-config`.
+- Or say it in prose: "use Damira to audit this config".
+
+**How to tell it ran:** the transcript shows the skill (for example `damira:config-audit`) before the tool calls, and the answer has vendor-specific detail such as CVE IDs, release-note bug numbers and exact remediation CLI.
+
+**If it doesn't trigger:**
+1. Check the plugin is enabled (`/plugin`).
+2. Check your API key (see above). Without one you're on the shared demo key, and the session start message says so.
+3. Run `/mcp` and look for `damira` with its tools listed. If MCP fails, the skills fall back to the bundled CLI.
+4. Try the explicit `/damira:<skill>` command. If that works and plain language didn't, tell us (see Support below): it's a routing gap, not a broken install.
 
 ## What's in the box
 

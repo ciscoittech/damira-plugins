@@ -1,6 +1,6 @@
 ---
 name: troubleshoot
-description: Ask Damira to diagnose an active, in-progress network fault. Use when the user reports something broken right now — an outage, a flapping interface, a BGP or OSPF adjacency down, dropped or blackholed traffic, failed calls, users unable to connect — or pastes show/log output for analysis. Returns vendor-specific diagnosis with exact CLI commands. Do NOT use for "how does X work" protocol questions, for reviewing a config that is not currently broken (use config-audit), or for planning an upgrade (use upgrade-plan).
+description: Ask Damira to diagnose an active, in-progress network fault. Use when the user reports something broken right now — an outage, a flapping interface, a BGP or OSPF adjacency down, dropped or blackholed traffic, failed calls, users unable to connect — or pastes show/log output for analysis. Also fires on direct questions like "why is BGP down" or "why is OSPF stuck in EXSTART". Returns vendor-specific diagnosis with exact CLI commands. Do NOT use for "how does X work" protocol questions, for reviewing a config that is not currently broken (use config-audit), or for planning an upgrade (use upgrade-plan).
 ---
 
 # Network Troubleshooting

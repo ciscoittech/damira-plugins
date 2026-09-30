@@ -17,6 +17,12 @@ dependencies. `damira-mcp` on PyPI is **not** required and is not used.
 
 Issues: [github.com/ciscoittech/damira-plugins/issues](https://github.com/ciscoittech/damira-plugins/issues).
 
+## What's new in 0.3.3
+
+- **Explicit commands.** `/troubleshoot`, `/upgrade-plan`, `/config-audit` and `/generate-config` run the matching Damira skill directly.
+- **Damira skills trigger more reliably.** `config-audit` now fires on any config you paste, not only on files with a config extension, and the skill descriptions are sharper.
+- **`damira lab|workbook|docx|diagram -h`** now show their own help.
+
 ## What's new in 0.3.2
 
 - **Test a change in a lab first.** The new `lab-test-change` skill deploys a throwaway ContainerLab lab, applies your playbook or script, runs show-command or pyATS/Genie checks, reports pass/fail and always destroys the lab. It needs Docker and containerlab on your machine; without them it validates the change only and says so.
@@ -97,6 +103,18 @@ it yourself:
 It creates `configs/` (git-ignored), `documents/` and `notes/`, and writes a
 marked Damira block with your network details into `AGENTS.md`. Re-running
 replaces only that block.
+
+## Using Damira
+
+Cursor decides on its own when a message matches a Damira skill. To make sure it uses one, run `/troubleshoot`, `/upgrade-plan`, `/config-audit` or `/generate-config`, or say "use Damira to..." in your message.
+
+**How to tell it ran:** the answer has vendor-specific detail such as CVE IDs, release-note bug numbers and exact remediation CLI.
+
+**If it doesn't trigger:**
+1. Check the plugin is enabled in Cursor's plugin panel.
+2. Check `DAMIRA_API_KEY` is set (see above). Without it you're on the shared demo key.
+3. If you added MCP, `agent mcp list-tools damira` should list its tools. The skills also work without MCP.
+4. Try the explicit command. If that works and plain language didn't, tell us: it's a routing gap, not a broken install.
 
 ## The device gate
 
