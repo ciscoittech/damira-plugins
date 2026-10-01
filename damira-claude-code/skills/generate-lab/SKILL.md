@@ -1,7 +1,8 @@
 ---
 name: generate-lab
-description: Build a runnable ContainerLab topology with startup configs for testing or practice. Use when the user asks to lab up, simulate, reproduce, or practice a scenario — BGP convergence, OSPF multi-area, MPLS L3VPN, EVPN-VXLAN, leaf-spine — using containerised nodes (Arista cEOS, Juniper cRPD, Nokia SR Linux, FRR, VyOS). This emits ContainerLab YAML only: if the user specifically wants GNS3, EVE-NG, or Cisco CML, say so up front rather than substituting ContainerLab. To test a change in the lab before production, use lab-test-change.
-allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs, mcp__damira__damira_search_vendor_docs
+description: 'Build a runnable ContainerLab topology with startup configs for testing or practice. Use when the user asks to lab up, simulate, reproduce, or practice a scenario — BGP convergence, OSPF multi-area, MPLS L3VPN, EVPN-VXLAN, leaf-spine — using containerised nodes (Arista cEOS, Juniper cRPD, Nokia SR Linux, FRR, VyOS). This emits ContainerLab YAML only: if the user specifically wants GNS3, EVE-NG, or Cisco CML, say so up front rather than substituting ContainerLab. To test a change in the lab before production, use lab-test-change.'
+when_to_use: 'Trigger phrases: "lab this up", "simulate BGP convergence", "reproduce this issue in a lab", "ContainerLab topology for leaf-spine", "practice EVPN-VXLAN", "build me a cEOS or SR Linux lab".'
+allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs
 ---
 
 # ContainerLab Topology Generation

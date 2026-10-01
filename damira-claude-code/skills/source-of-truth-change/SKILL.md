@@ -1,6 +1,7 @@
 ---
 name: source-of-truth-change
 description: Turn intended state in the engineer's source of truth (NetBox or Nautobot) into a validated change, then hand it to the automation they already run — an Ansible Automation Platform job in check mode, a pyATS/Genie before-and-after diff, or a Terraform plan. Use when the user asks to make a change "from NetBox" or "from Nautobot", to push what the source of truth says, to bring devices in line with intended state, or to run a validated playbook through AAP or pyATS. Damira never applies the change; the engineer does. For a playbook with no source of truth use generate-playbook, for Terraform alone use generate-terraform, and for an active outage use troubleshoot.
+when_to_use: 'Trigger phrases: "make this change from NetBox", "push what Nautobot says", "bring devices in line with intended state", "run it through AAP in check mode", "pyATS diff after a NetBox change", "Terraform plan from the source of truth".'
 ---
 
 # Source-of-truth change

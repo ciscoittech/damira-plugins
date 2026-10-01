@@ -1,7 +1,8 @@
 ---
 name: generate-pipeline
 description: Write a CI/CD pipeline for network automation — GitHub Actions or GitLab CI with lint (damira validate), syntax, check-mode or plan, a manual approval gate, then deploy — and validate it locally. Use when the user asks for a pipeline, CI, GitOps, GitHub Actions workflow, or .gitlab-ci.yml around Ansible playbooks, Terraform, Nornir scripts or configs. For the automation itself use generate-playbook, generate-terraform or generate-automation; for pre/post checks use generate-tests.
-allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs, mcp__damira__damira_search_vendor_docs
+when_to_use: 'Trigger phrases: "GitHub Actions workflow for my playbooks", "CI for network automation", ".gitlab-ci.yml with an approval gate", "GitOps for network configs", "lint and plan before deploy".'
+allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs
 ---
 
 # CI pipeline generation (GitHub Actions / GitLab CI)

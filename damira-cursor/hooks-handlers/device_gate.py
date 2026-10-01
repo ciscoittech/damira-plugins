@@ -9,7 +9,7 @@ events, which is actually cleaner:
     through the user's own SSH keys / VPN / jump hosts, so no credentials pass through
     Damira. `command` arrives at the TOP LEVEL of the payload, not under tool_input.
 
-  beforeMCPExecution  — the lab-only ssh_command / network_device_command tools.
+  beforeMCPExecution  — the engineer's own AAP / pyATS / Terraform MCP servers.
     `tool_name` identifies the call.
 
 One handler serves both because Cursor gives them the same output contract:
@@ -56,7 +56,7 @@ _ELEVATED = {"guided", "lab"}
 _ASK_MSG = (
     "Damira is in advisor mode: it recommends commands and never runs them on network "
     "devices itself. This is your own shell, so it's your call — approve it if this host "
-    "isn't network gear. Damira's own device tools stay blocked either way."
+    "isn't network gear."
 )
 
 _DENY_MSG = (

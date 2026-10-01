@@ -1,7 +1,8 @@
 ---
 name: config-audit
 description: Security-audit an existing network device configuration — router, switch, firewall, wireless controller — for weak credentials, insecure management access, missing hardening, and best-practice violations. Use whenever the user pastes a device config or points at a .cfg file, whether or not they ask you to review/audit/harden/check it — a bare paste ("here's r1's config", "can you look at this?") is itself the trigger, not just an explicit audit verb. Not for writing a new config (use generate-config) and not for diagnosing an active outage (use troubleshoot).
-allowed-tools: mcp__plugin_damira_damira__analyze_config, mcp__plugin_damira_damira__damira_search_vendor_docs, mcp__damira__analyze_config, mcp__damira__damira_search_vendor_docs
+when_to_use: 'Trigger phrases: "here''s r1''s config", "can you look at this?", "is this config secure?", "harden this", "check this running-config", a pasted show running-config or a .cfg file, SNMP community strings or telnet enabled, a pre-change or compliance config review.'
+allowed-tools: mcp__plugin_damira_damira__analyze_config, mcp__plugin_damira_damira__damira_search_vendor_docs
 ---
 
 # Configuration Security Audit

@@ -1,7 +1,8 @@
 ---
 name: generate-playbook
 description: Write an Ansible playbook, inventory, and group_vars for a repeatable change across many network devices, then validate it locally before handing it back. Use when the user asks for Ansible by name, or asks how to push the same change to a fleet — VLANs, banners, NTP/AAA, SNMPv3, config backup, compliance checks — using cisco.ios, cisco.nxos, arista.eos, juniper.device (Junos), paloaltonetworks.panos, or fortinet.fortios. For Python (Nornir/Netmiko/Scrapli) use generate-automation, for Terraform use generate-terraform, for pyATS/pytest checks use generate-tests, for a CI pipeline use generate-pipeline, and for a single device's config use generate-config.
-allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs, mcp__damira__damira_search_vendor_docs
+when_to_use: 'Trigger phrases: "Ansible playbook to push NTP to all switches", "roll this VLAN change out to the fleet", "playbook and inventory for cisco.ios", "config backup with Ansible", "group_vars for my network devices".'
+allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs
 ---
 
 # Ansible playbook generation

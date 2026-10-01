@@ -1,7 +1,8 @@
 ---
 name: generate-terraform
 description: Write Terraform for network infrastructure — NetBox, Palo Alto PAN-OS, FortiOS, Cisco Meraki, Cisco IOS-XE and NX-OS providers — then validate it locally and end with terraform plan. Use when the user asks for Terraform, HCL, or infrastructure-as-code for firewall rules and objects, NetBox IPAM/DCIM records, Meraki networks and SSIDs, VLANs, or interfaces. Arista EOS/CloudVision has no Terraform provider — use generate-playbook. For Ansible use generate-playbook, for Python use generate-automation, for a CI pipeline around it use generate-pipeline.
-allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs, mcp__damira__damira_search_vendor_docs
+when_to_use: 'Trigger phrases: "Terraform for firewall rules", "HCL for NetBox", "Meraki networks and SSIDs as code", "infrastructure-as-code for VLANs and interfaces", "terraform plan for PAN-OS or FortiOS objects".'
+allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs
 ---
 
 # Terraform generation

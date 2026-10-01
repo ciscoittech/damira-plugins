@@ -51,6 +51,13 @@ platforms and versions you run and how changes get approved, then creates
 `notes/`, and records your network in `CLAUDE.md` so every chat starts with that
 context. Re-running updates your answers without touching the rest of the file.
 
+## What's new in 0.3.4
+
+- **Clearer skill matching.** Each skill now has a `when_to_use` list of the phrases it's for, alongside its description, so Claude has a second signal for when to pick it.
+- **Accurate tool descriptions.** Damira's tools describe what they actually do, in plain language.
+- **Device gate tidied.** The gate still blocks device-execution tools from any other MCP server in advisor mode; checks for tools Damira no longer ships are gone.
+- **Trigger evals included.** `evals/triggering/` holds a small `claude plugin eval` suite that checks the right skill fires for common requests and doesn't fire for unrelated ones.
+
 ## What's new in 0.3.3
 
 - **Damira skills trigger more reliably.** `config-audit` now fires on any config you paste, not only on files with a config extension, and the skill descriptions are sharper. A small local hook names the matching skill when your message looks like a device config, `show` output, a fault report, an upgrade or a config request. It runs no network call and never changes your prompt. Turn it off with `export DAMIRA_PROMPT_HINTS=0`.

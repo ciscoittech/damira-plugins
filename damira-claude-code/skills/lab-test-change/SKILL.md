@@ -1,6 +1,7 @@
 ---
 name: lab-test-change
 description: Test a network change in a throwaway ContainerLab lab before it goes near production — deploy the lab, apply the playbook or script, run show-command or pyATS/Genie checks, report pass/fail, and always destroy the lab. Use when the user says "test this in a lab first", "prove this change before the window", "dry-run this playbook against a lab", or wants evidence a change works before a CAB. Needs docker and containerlab on the engineer's machine; without them it validates only and says so. To only build a lab, use generate-lab; to write the change, use generate-playbook, generate-automation or generate-terraform.
+when_to_use: 'Trigger phrases: "test this in a lab first", "prove this change before the window", "dry-run this playbook against a lab", "evidence for the CAB that it works", "validate the change in ContainerLab".'
 ---
 
 # Lab before prod

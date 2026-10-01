@@ -17,6 +17,11 @@ dependencies. `damira-mcp` on PyPI is **not** required and is not used.
 
 Issues: [github.com/ciscoittech/damira-plugins/issues](https://github.com/ciscoittech/damira-plugins/issues).
 
+## What's new in 0.3.4
+
+- **Accurate tool descriptions.** Damira's MCP tools describe what they actually do, in plain language.
+- **Device gate tidied.** The gate still blocks device-execution tools from any other MCP server in advisor mode; checks for tools Damira no longer ships are gone.
+
 ## What's new in 0.3.3
 
 - **Explicit commands.** `/troubleshoot`, `/upgrade-plan`, `/config-audit` and `/generate-config` run the matching Damira skill directly.

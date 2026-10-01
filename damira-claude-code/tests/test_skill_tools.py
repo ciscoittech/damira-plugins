@@ -1,9 +1,8 @@
 """Every skill's allowed-tools entry must name a tool the bundled server exposes.
 
 Installed as a plugin, Claude Code registers the server's tools as
-mcp__plugin_damira_damira__<tool>. The skills pre-approved mcp__damira__<tool>, which
-matches nothing in a plugin install, so every Damira call still prompted (and was
-denied outright in headless runs).
+mcp__plugin_damira_damira__<tool>. The short mcp__damira__<tool> form matches nothing in
+a plugin install, so skills must not list it.
 """
 
 import re
@@ -36,11 +35,10 @@ def test_every_allowed_tool_exists_in_the_bundled_server():
             assert tool in CATALOG, f"{skill}: {name} is not a tool the server exposes"
 
 
-def test_every_skill_pre_approves_the_plugin_installed_names():
+def test_every_skill_pre_approves_only_the_plugin_installed_names():
     for skill, names in _allowed_tools():
         if not any(n.startswith("mcp__") for n in names):
             continue  # skill uses no Damira tools (e.g. init)
         assert any(n.startswith(PLUGIN_PREFIX) for n in names), skill
         for name in names:
-            if name.startswith("mcp__damira__"):
-                assert PLUGIN_PREFIX + name.rsplit("__", 1)[-1] in names, f"{skill}: {name}"
+            assert not name.startswith("mcp__damira__"), f"{skill}: stale {name}"

@@ -1,7 +1,8 @@
 ---
 name: generate-workbook
 description: Build an Excel workbook (.xlsx) for a network procedure — a migration, platform migration, security audit, change control, or incident-response workbook — grounded in Damira evidence, with an HTML preview. Use when the user asks for a spreadsheet, workbook, tracker, or Excel version of a migration plan, cutover, audit findings, change record, or incident timeline. For a version-to-version upgrade, use upgrade-plan (it offers the workbook itself). Not for diagnosing an active fault — use troubleshoot.
-allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs, mcp__plugin_damira_damira__damira_search_release_notes, mcp__plugin_damira_damira__damira_search_cve, mcp__plugin_damira_damira__damira_troubleshoot, mcp__plugin_damira_damira__analyze_config, mcp__damira__damira_search_vendor_docs, mcp__damira__damira_search_release_notes, mcp__damira__damira_search_cve, mcp__damira__damira_troubleshoot, mcp__damira__analyze_config
+when_to_use: 'Trigger phrases: "put this in a spreadsheet", "Excel tracker for the migration", "cutover workbook", "audit findings in xlsx", "change control workbook", "incident timeline spreadsheet".'
+allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs, mcp__plugin_damira_damira__damira_search_release_notes, mcp__plugin_damira_damira__damira_search_cve, mcp__plugin_damira_damira__damira_troubleshoot, mcp__plugin_damira_damira__analyze_config
 ---
 
 # Procedure workbooks

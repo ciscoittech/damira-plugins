@@ -1,7 +1,8 @@
 ---
 name: generate-tests
 description: Write network tests — pyATS/Genie learn, change, learn, diff jobs that prove a change did what it should and nothing else, and pytest tests for automation scripts — then validate them locally. Use when the user asks for pyATS, Genie, AEtest, a testbed file, pre/post change verification, state snapshots, or unit tests for a Nornir/Netmiko script. For the change itself use generate-playbook, generate-automation or generate-terraform.
-allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs, mcp__damira__damira_search_vendor_docs
+when_to_use: 'Trigger phrases: "pyATS test", "Genie learn before and after", "pre/post change verification", "snapshot state and diff it", "AEtest job", "testbed file", "pytest for my Nornir script".'
+allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs
 ---
 
 # Test generation (pyATS / Genie / pytest)

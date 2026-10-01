@@ -6,20 +6,16 @@ commands, the engineer runs them. This hook is what makes that structural rather
 than advisory, so it has to hold even when the model has been told otherwise by a
 skill, by the user, or by text arriving inside tool output.
 
-It covers two paths, because covering only the first leaves the sanctioned one open:
-
-  1. The MCP tools `ssh_command` / `network_device_command`.
-  2. `Bash` invoking ssh/telnet/nc — which is how the documented workflow reaches a
-     device (the user's own keys, VPN, and jump hosts, so no credentials pass
-     through Damira). A gate that only matched the MCP tool names would block the
-     path nobody uses and miss the one everybody uses.
+The bundled MCP server exposes no device-execution tools, so the path it covers is
+`Bash` invoking ssh/telnet/nc — which is how the documented workflow reaches a
+device (the user's own keys, VPN, and jump hosts, so no credentials pass through
+Damira).
 
 FAIL CLOSED. Claude Code treats every exit code except 2 as non-blocking, including
 1 — so an unhandled Python traceback would let SSH through while the user still
 believes advisor mode is enforced. Every failure path here therefore exits 2.
 
-Damira's own device tools are denied outright in advisor mode. A shell ssh/telnet/nc
-is instead handed to the user to approve, because that is their terminal and not
+A shell ssh/telnet/nc is handed to the user to approve, because that is their terminal and not
 every host is network gear — a blanket block broke ordinary server work as soon as
 the plugin was installed. Set device_gate to "strict" to block those too.
 
@@ -47,13 +43,14 @@ _DEVICE_CMD = re.compile(
 
 # Matched on the tool part so every registration of a Damira server is covered:
 # mcp__damira__* when added by hand, mcp__plugin_damira_damira__* when installed
-# as a plugin. Exact names missed the plugin form.
+# as a plugin. The standalone damira-mcp server ships these tools.
 _BLOCKED_MCP_SUFFIXES = ("__ssh_command", "__network_device_command")
 
 
 def _is_blocked_mcp_tool(tool_name: str) -> bool:
     return (tool_name.startswith("mcp__") and "damira" in tool_name
             and tool_name.endswith(_BLOCKED_MCP_SUFFIXES))
+
 
 _ELEVATED_MODES = {"guided", "lab"}
 
@@ -68,7 +65,7 @@ _DENY_REASON = (
 _ASK_REASON = (
     "Damira is in advisor mode: it recommends commands and never runs them on network "
     "devices itself. This is your own shell, so it's your call — approve it if this "
-    "host isn't network gear. Damira's own device tools stay blocked either way."
+    "host isn't network gear."
 )
 
 
@@ -84,8 +81,7 @@ def _ask(reason: str) -> None:
     jump hosts and their own VPS the same way, and a hard block made the plugin
     break their terminal the moment it was installed. Asking keeps the agent from
     reaching a device on its own — which is the actual guarantee — while leaving
-    the engineer in charge of their own shell. Damira's device tools still fail
-    closed, and DEVICE_GATE=strict restores the hard block here too.
+    the engineer in charge of their own shell. DEVICE_GATE=strict restores the hard block here too.
     """
     print(json.dumps({
         "hookSpecificOutput": {

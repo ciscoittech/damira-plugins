@@ -1,6 +1,7 @@
 ---
 name: generate-diagram
 description: Draw a network topology diagram from the device configs and saved show cdp/lldp neighbors detail output in configs/ — an SVG, a self-contained HTML preview, Mermaid and D2, and optionally an editable PowerPoint slide. Use when the user asks to draw, map, diagram or visualise the topology, the network, the links between devices, or wants a network diagram for a MOP, a change record, an incident report or a deck. Not for diagnosing a fault (use troubleshoot) or reviewing a config's security (use config-audit).
+when_to_use: 'Trigger phrases: "draw our campus topology", "map the network from these configs", "diagram the links between devices", "network diagram for the change record", "topology slide for a deck".'
 ---
 
 # Topology diagrams

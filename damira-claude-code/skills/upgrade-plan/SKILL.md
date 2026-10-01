@@ -1,7 +1,8 @@
 ---
 name: upgrade-plan
 description: Ask Damira to assess a version-to-version upgrade of a network platform and produce the MOP and change control. Use when the user names a product and a target release — "IOS-XE 17.6.5 to 17.9.5", "CUCM 12.5 SU7 to 15", "PAN-OS 10.2 to 11.1" — or asks what breaks, what the risk is, or how long a maintenance window needs to be. Covers CUCM, IOS-XE, IOS-XR, NX-OS, PAN-OS, FortiOS, Junos, ISE, ASA, WLC/Catalyst 9800. Not for platform-to-platform migration (CUCM to Webex Calling, on-prem to cloud) and not for diagnosing a fault after an upgrade — use troubleshoot for that.
-allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs, mcp__plugin_damira_damira__damira_search_release_notes, mcp__plugin_damira_damira__damira_search_cve, mcp__plugin_damira_damira__damira_upgrade_plan, mcp__damira__damira_search_vendor_docs, mcp__damira__damira_search_release_notes, mcp__damira__damira_search_cve, mcp__damira__damira_upgrade_plan
+when_to_use: 'Trigger phrases: "upgrade IOS-XE 17.6.5 to 17.9.5", "moving our 9300s to 17.9", "what breaks if we go from CUCM 12.5 to 15", "how long a window do I need", "risk of upgrading PAN-OS", "write the MOP and change control for the upgrade".'
+allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs, mcp__plugin_damira_damira__damira_search_release_notes, mcp__plugin_damira_damira__damira_search_cve, mcp__plugin_damira_damira__damira_upgrade_plan
 ---
 
 # Upgrade Planning

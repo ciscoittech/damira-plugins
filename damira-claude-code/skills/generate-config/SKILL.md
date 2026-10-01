@@ -1,7 +1,8 @@
 ---
 name: generate-config
 description: Write a deployable configuration for a real network device. Use when the user asks for the config, CLI, or commands to set up a feature on a specific platform — BGP peering, OSPF, VLANs and trunks, ACLs, NAT, VPN, QoS, AAA/TACACS, SNMPv3, NTP — on Cisco IOS/IOS-XE/NX-OS, Arista EOS, Juniper Junos, Palo Alto, or Fortinet. Also fires on "give me the commands for..." and "how do I set up X on a 9300". Not for lab topologies (use generate-lab), not for fleet-wide automation (use generate-playbook), and not for reviewing a config that already exists (use config-audit).
-allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs, mcp__damira__damira_search_vendor_docs
+when_to_use: 'Trigger phrases: "write the BGP config for a new edge router", "give me the commands for...", "how do I set up X on a 9300", "config for VLANs and trunks", "ACL for...", "set up SNMPv3 / TACACS / NTP on...", a single device on Cisco, Arista, Juniper, Palo Alto or Fortinet.'
+allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs
 ---
 
 # Network Config Generation

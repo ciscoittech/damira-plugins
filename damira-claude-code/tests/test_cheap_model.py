@@ -22,6 +22,13 @@ def _frontmatter(path):
     return dict(re.findall(r"^([A-Za-z]\w*):\s*(.*)$", m.group(1), re.M))
 
 
+def _yaml_frontmatter(path):
+    import yaml  # a strict parse: the naive splitter above hid broken YAML
+
+    m = re.match(r"^---\n(.*?)\n---\n", path.read_text(), re.S)
+    return yaml.safe_load(m.group(1))
+
+
 def test_agents_pin_a_cheap_model_without_ignored_fields():
     agents = {p.stem: p for p in (ROOT / "agents").glob("*.md")}
     assert AGENTS <= set(agents)
@@ -49,3 +56,13 @@ def test_script_heavy_skills_delegate_to_the_cheap_agents():
     for name in DELEGATING:
         text = (ROOT / "skills" / name / "SKILL.md").read_text()
         assert "damira-renderer" in text or "damira-fixer" in text, name
+
+
+def test_model_invocable_skills_have_when_to_use_within_the_cap():
+    for skill in sorted((ROOT / "skills").glob("*/SKILL.md")):
+        fm = _yaml_frontmatter(skill)
+        if "\ndisable-model-invocation: true\n" in skill.read_text():
+            continue
+        assert fm.get("when_to_use"), f"{skill.parent.name}: needs when_to_use"
+        # Claude Code truncates description + when_to_use past 1,536 chars.
+        assert len(fm["description"]) + len(fm["when_to_use"]) <= 1536, skill.parent.name

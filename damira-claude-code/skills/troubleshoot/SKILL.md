@@ -1,7 +1,8 @@
 ---
 name: troubleshoot
 description: Ask Damira to diagnose an active, in-progress network fault. Use when the user reports something broken right now — an outage, a flapping interface, a BGP or OSPF adjacency down, dropped or blackholed traffic, failed calls, users unable to connect — or pastes show/log output for analysis. Also fires on direct questions like "why is BGP down" or "why is OSPF stuck in EXSTART". Returns vendor-specific diagnosis with exact CLI commands. Do NOT use for "how does X work" protocol questions, for reviewing a config that is not currently broken (use config-audit), or for planning an upgrade (use upgrade-plan).
-allowed-tools: mcp__plugin_damira_damira__damira_troubleshoot, mcp__plugin_damira_damira__damira_search_vendor_docs, mcp__damira__damira_troubleshoot, mcp__damira__damira_search_vendor_docs
+when_to_use: 'Trigger phrases: "why is BGP down", "OSPF neighbor stuck in EXSTART", "interface keeps flapping", "users can''t reach X", "calls are failing", "traffic is blackholed", pasted show/log output from a device that is misbehaving now.'
+allowed-tools: mcp__plugin_damira_damira__damira_troubleshoot, mcp__plugin_damira_damira__damira_search_vendor_docs
 ---
 
 # Network Troubleshooting

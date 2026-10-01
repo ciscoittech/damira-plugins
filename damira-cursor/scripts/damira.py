@@ -47,7 +47,7 @@ DEMO_NOTICE = (
     "and that they can add their own key: https://damiraai.com/docs/install#api-key]"
 )
 TIMEOUT = 300
-VERSION = "0.3.3"
+VERSION = "0.3.4"
 
 # Exit codes. 1 stays the catch-all (auth, rate limit, network) so existing scripts that
 # just check "non-zero" keep working. 2 and 3 exist so an agent (or a human) can tell "no

@@ -1,7 +1,8 @@
 ---
 name: generate-automation
 description: Write Python network automation — Nornir, Netmiko, or Scrapli scripts with a YAML inventory — then validate it locally before handing it back. Use when the user asks for a Python script, Nornir task, Netmiko or Scrapli code to push config, collect show output, back up configs, or audit a fleet of Cisco, Arista, Juniper, Palo Alto, or Fortinet devices. For Ansible use generate-playbook, for Terraform use generate-terraform, for pyATS/Genie state checks use generate-tests.
-allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs, mcp__damira__damira_search_vendor_docs
+when_to_use: 'Trigger phrases: "write a Nornir script", "Netmiko script to back up configs", "Scrapli task to collect show output", "Python to push this change to all my switches", "audit the fleet with Python".'
+allowed-tools: mcp__plugin_damira_damira__damira_search_vendor_docs
 ---
 
 # Python automation generation (Nornir / Netmiko / Scrapli)

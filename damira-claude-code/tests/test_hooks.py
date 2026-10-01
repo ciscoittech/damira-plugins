@@ -91,17 +91,18 @@ def test_strict_mode_restores_the_hard_block(command):
     "tool",
     [
         "mcp__damira__ssh_command",
-        "mcp__damira__network_device_command",
-        # how Claude Code names them when the server ships inside the plugin
-        "mcp__plugin_damira_damira__ssh_command",
         "mcp__plugin_damira_damira__network_device_command",
     ],
 )
-def test_device_gate_blocks_mcp_tools_in_advisor(tool):
-    """Damira's own device tools are never merely asked about: the product claim is
-    that the agent cannot drive a device itself."""
+def test_device_gate_blocks_mcp_device_tools_in_advisor(tool):
     code, _, _ = run_hook(DEVICE_GATE, {"tool_name": tool, "tool_input": {"host": "10.0.0.1"}})
     assert code == BLOCK
+
+
+def test_device_gate_allows_bundled_damira_tools_in_advisor():
+    code, _, _ = run_hook(DEVICE_GATE, {"tool_name": "mcp__plugin_damira_damira__damira_troubleshoot",
+                                        "tool_input": {"message": "ospf down"}})
+    assert code == 0
 
 
 @pytest.mark.parametrize(
@@ -285,13 +286,13 @@ def test_document_gate_template_alone_is_not_evidence(tmp_path):
     assert _decision(out) == "ask", "a template is a scaffold, not grounding"
 
 
-def test_hook_matcher_routes_plugin_named_device_tools_to_the_gate():
+def test_hook_matcher_routes_shell_and_orchestration_tools_to_the_gate():
     """The gate can only block what the PreToolUse matcher sends it."""
     import re
     hooks = json.loads((HANDLERS.parent / "hooks" / "hooks.json").read_text())
     matchers = [h["matcher"] for h in hooks["hooks"]["PreToolUse"]
                 if "device_gate" in h["hooks"][0]["command"]]
-    for tool in ("mcp__plugin_damira_damira__ssh_command", "mcp__damira__network_device_command"):
+    for tool in ("Bash", "mcp__AAP__launch_job_template", "mcp__damira__ssh_command"):
         assert any(re.fullmatch(m, tool) for m in matchers), tool
 
 

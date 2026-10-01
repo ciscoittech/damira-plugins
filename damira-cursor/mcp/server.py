@@ -42,9 +42,9 @@ TOOLS = [
         "description": (
             "Search official vendor documentation (cisco.com, juniper.net, arista.com, "
             "paloaltonetworks.com, fortinet.com) for authoritative, version-specific "
-            "procedures. USE WHEN you need exact CLI syntax for a platform and version, or "
-            "platform-specific behaviour beyond your training data. DO NOT use for general "
-            "protocol knowledge — you already know how BGP and OSPF work."
+            "procedures. Use it for exact CLI syntax on a platform and version, or "
+            "platform-specific behaviour beyond your training data. Not for general "
+            "protocol knowledge, which you already have."
         ),
         "inputSchema": _s(
             "",
@@ -56,8 +56,8 @@ TOOLS = [
         "name": "damira_search_cve",
         "description": (
             "Search CVEs and security advisories from NVD, CVE.org, and vendor advisories. "
-            "USE WHEN the user asks about a specific CVE, whether a version is vulnerable, or "
-            "for security posture before an upgrade. Returns real-time data you do not have."
+            "Use it when the user asks about a specific CVE, whether a version is vulnerable, or "
+            "for security posture before an upgrade. Returns current data you do not have."
         ),
         "inputSchema": _s(
             "",
@@ -69,7 +69,7 @@ TOOLS = [
         "name": "damira_search_release_notes",
         "description": (
             "Search release notes, upgrade guides, and known issues for a specific platform "
-            "version. USE WHEN planning an upgrade and you need the bugs and caveats in the "
+            "version. Use it when planning an upgrade and you need the bugs and caveats in the "
             "target release."
         ),
         "inputSchema": _s(
@@ -81,11 +81,11 @@ TOOLS = [
     {
         "name": "damira_troubleshoot",
         "description": (
-            "CCIE-level structured diagnosis: gathers evidence, isolates the fault domain, ranks "
-            "likely causes, and gives the exact CLI to confirm and fix. USE WHEN there is an active fault and the user has symptoms or show "
-            "output. Each call is INDEPENDENT and remembers nothing — always send the "
-            "cumulative problem statement and all output collected so far, not just the newest "
-            "paste. Sending only the delta makes the second diagnosis worse than the first."
+            "Structured diagnosis of an active fault from the symptoms and show output you send: "
+            "likely fault domain, ranked causes, and the CLI to confirm and fix. It reasons over "
+            "what you provide, so include all output collected so far. Each call is independent "
+            "and remembers nothing; send the cumulative problem statement every time, not just "
+            "the newest paste."
         ),
         "inputSchema": _s(
             "",
@@ -98,8 +98,8 @@ TOOLS = [
         "name": "damira_upgrade_plan",
         "description": (
             "Structured upgrade assessment: path, prerequisites, risks, maintenance window, "
-            "rollback. USE WHEN planning a named version-to-version upgrade. YOU write the MOP "
-            "and change control from this data — also call damira_search_cve and "
+            "rollback. Use it when planning a named version-to-version upgrade. You write the MOP "
+            "and change control from this data; also call damira_search_cve and "
             "damira_search_release_notes on the target version first."
         ),
         "inputSchema": _s(
@@ -113,7 +113,7 @@ TOOLS = [
     {
         "name": "damira_agent",
         "description": (
-            "Full agent pipeline for complex multi-domain queries. SLOWER (30-60s). Prefer the "
+            "Full agent pipeline for complex multi-domain queries. Slower (30-60s). Prefer the "
             "specialised tools above when the intent is clear; use this only when none fit."
         ),
         "inputSchema": _s("", message={"type": "string", "_required": True}),
@@ -122,8 +122,8 @@ TOOLS = [
         "name": "analyze_config",
         "description": (
             "Regex security audit of a network device configuration — weak credentials, type 7 "
-            "passwords, SNMP communities, HTTP management, missing NTP/logging/banner. RUNS "
-            "LOCALLY: the config text never leaves this machine, which is why it is safe to "
+            "passwords, SNMP communities, HTTP management, missing NTP/logging/banner. Runs "
+            "locally: the config text never leaves this machine, so it is safe to "
             "pass production configs."
         ),
         "inputSchema": _s(
